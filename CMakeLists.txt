@@ -11,7 +11,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-Ofast -flto -ffast-math")
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR})
 find_package(GMP REQUIRED)
 
-include_directories(magma_fields PUBLIC ${CMAKE_SOURCE_DIR} ${CMAKE_SOURCE_DIR}/base ${GMP_INCLUDE_DIRS})
+include_directories(magma_fields PUBLIC ${CMAKE_SOURCE_DIR} ${GMP_INCLUDE_DIRS})
 
 add_executable(magma_fields main.cpp)
 target_link_libraries(magma_fields gmp gmpxx)
