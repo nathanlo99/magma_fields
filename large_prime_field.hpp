@@ -60,4 +60,9 @@ struct LargePrimeField : Field<integer_t> {
   // NOTE: We take the default implementations of div and pow
 
   bool eq(const value_t a, const value_t b) const override { return a == b; }
+
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const LargePrimeField &field) {
+    return os << "Finite field of order " << field.p;
+  }
 };
