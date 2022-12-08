@@ -7,7 +7,7 @@
 
 template <class Field> struct FieldElement;
 
-template <class Value> struct FiniteField : Indexed<FiniteField<Value>> {
+template <class Value> struct Field : Indexed<Field<Value>> {
   using value_t = Value;
 
   // Field properties

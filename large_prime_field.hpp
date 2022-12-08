@@ -6,21 +6,20 @@
 #include <cstdint>
 #include <vector>
 
-// SmallPrimeField: FiniteField(p) for primes 256 <= p < 65536
-struct SmallPrimeField : Field<uint32_t> {
-  using value_t = uint32_t;
-  using element_t = FieldElement<SmallPrimeField>;
+// LargePrimeField: FiniteField(p) for primes 2^32 <= p
+struct LargePrimeField : Field<integer_t> {
+  using value_t = integer_t;
+  using element_t = FieldElement<LargePrimeField>;
 
   const value_t p;
 
-  SmallPrimeField(const integer_t p) : p(to_int(p)) {
+  LargePrimeField(const integer_t p) : p(p) {
     if (p <= 0 || !is_prime(p))
-      throw math_error() << "SmallPrimeField expects a positive prime, got "
+      throw math_error() << "LargePrimeField expects a positive prime, got "
                          << p;
-    if (!p.fits_ushort_p())
-      throw math_error()
-          << "Cannot instantiate SmallPrimeField with modulus " << p
-          << ", expects a number which fits in an unsigned short";
+    if (p.fits_uint_p())
+      throw math_error() << "Cannot instantiate LargePrimeField with modulus "
+                         << p << ", expects a number larger than 2^32";
   }
 
   integer_t characteristic() const override { return p; }
@@ -30,8 +29,7 @@ struct SmallPrimeField : Field<uint32_t> {
   value_t zero() const override { return 0; }
   value_t one() const override { return 1; }
   value_t integer(const integer_t number) const override {
-    const int64_t num = to_int(number);
-    return ((num % p) + p) % p;
+    return ((number % p) + p) % p;
   }
   element_t operator()(const integer_t num) const {
     return element_t(*this, integer(num));
@@ -45,6 +43,7 @@ struct SmallPrimeField : Field<uint32_t> {
     return (a + p - b) % p;
   }
 
+  // TODO: Use Montgomery modular representation to make this faster
   value_t inv(const value_t a) const override {
     value_t r0 = p, r1 = a, s0 = 1, s1 = 0, t0 = 0, t1 = 1;
     while (r1 != 0) {

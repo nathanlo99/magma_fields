@@ -1,8 +1,14 @@
 
+#include "large_prime_field.hpp"
+#include "medium_prime_field.hpp"
 #include "small_prime_field.hpp"
+#include "util.hpp"
 #include <iostream>
 
 #include <gmpxx.h>
+
+using FiniteField =
+    std::variant<SmallPrimeField, MediumPrimeField, LargePrimeField>;
 
 mpz_class fact(const mpz_class n) {
   return n <= 1 ? 1_mpz : n * factorial(n - 1);
