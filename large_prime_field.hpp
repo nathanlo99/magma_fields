@@ -23,13 +23,13 @@ struct LargePrimeField : Field<integer_t> {
   }
 
   integer_t characteristic() const override { return p; }
-  integer_t degree() const override { return 1; }
+  uint32_t degree() const override { return 1; }
   integer_t cardinality() const override { return p; }
 
   value_t zero() const override { return 0; }
   value_t one() const override { return 1; }
   value_t integer(const integer_t number) const override {
-    return ((number % p) + p) % p;
+    return unsigned_mod(number, p);
   }
   uint32_t as_integer(const value_t number) const { return to_uint(number); }
   element_t operator()(const integer_t num) const {

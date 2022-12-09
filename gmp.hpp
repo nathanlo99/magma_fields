@@ -19,8 +19,13 @@ inline int64_t to_int(const integer_t n) {
     throw math_error() << "Could not convert " << n << " to int: too large";
   return mpz_get_si(n.get_mpz_t());
 }
+
 inline uint64_t to_uint(const integer_t n) {
   if (!n.fits_uint_p())
     throw math_error() << "Could not convert " << n << " to uint: too large";
   return mpz_get_ui(n.get_mpz_t());
+}
+
+inline integer_t unsigned_mod(const integer_t n, const integer_t p) {
+  return ((n % p) + p) % p;
 }

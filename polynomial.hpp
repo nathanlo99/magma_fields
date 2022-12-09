@@ -103,10 +103,10 @@ public:
   friend Polynomial operator+(const element_t k, const Polynomial &p) {
     return p + k;
   }
-  friend Polynomial operator+(const Polynomial &p, const value_t k) {
-    return p + p.field.element(k);
+  friend Polynomial operator+(const Polynomial &p, const integer_t k) {
+    return p + p.field(k);
   }
-  friend Polynomial operator+(const value_t k, const Polynomial &p) {
+  friend Polynomial operator+(const integer_t k, const Polynomial &p) {
     return p + k;
   }
 
@@ -185,6 +185,19 @@ public:
     return result;
   }
 
+  friend Polynomial inv_mod(const Polynomial &f, const Polynomial &mod) {
+    const Polynomial zero_p = Polynomial(f.field, f.variable, {f.zero}),
+                     one_p = Polynomial(f.field, f.variable, {f.one});
+    Polynomial r0 = mod, r1 = f, s0 = one_p, s1 = zero_p, t0 = zero_p,
+               t1 = one_p;
+    while (r1 != zero_p) {
+      const auto &[q, r2] = divmod(r0, r1);
+      std::tie(r0, s0, t0, r1, s1, t1) =
+          std::make_tuple(r1, s1, t1, r2, s0 - s1 * q, t0 - t1 * q);
+    }
+    return (t0 + mod) % mod;
+  }
+
   friend std::pair<Polynomial, Polynomial> divmod(const Polynomial &p,
                                                   const Polynomial &q) {
     if (p.field != q.field)
@@ -234,11 +247,11 @@ public:
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Polynomial &p) {
-    if (p.coeffs.size() == 1 && p[0] == 0)
+    if (p.coeffs.size() == 1 && p[0] == p.zero)
       return os << "0";
     bool first = true;
     for (int d = static_cast<int>(p.coeffs.size()) - 1; d >= 0; --d) {
-      if (p[d] == 0)
+      if (p[d] == p.zero)
         continue;
       if (first) {
         first = false;
@@ -246,9 +259,9 @@ public:
         os << " + ";
       }
 
-      const value_t coeff = p.coeffs[d].value;
+      const element_t coeff = p.coeffs[d];
       if (d != 0) {
-        if (coeff != 1)
+        if (coeff != p.one)
           os << coeff;
         os << p.variable;
       } else {

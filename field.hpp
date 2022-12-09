@@ -20,7 +20,7 @@ template <class Value> struct Field : Indexed<Field<Value>> {
 
   // Field properties
   virtual integer_t characteristic() const = 0;
-  virtual integer_t degree() const = 0;
+  virtual uint32_t degree() const = 0;
   virtual integer_t cardinality() const = 0;
 
   // Element constructors

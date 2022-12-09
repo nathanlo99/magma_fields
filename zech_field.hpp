@@ -90,7 +90,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   }
 
   integer_t characteristic() const override { return p; }
-  integer_t degree() const override { return k; }
+  uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
 
   value_t zero() const override { return q - 1; }
@@ -98,7 +98,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   value_t integer(const integer_t number) const override {
     value_t result = zero(), base = one();
     // This conversion will fit since p fits in a uint32_t
-    uint32_t num = to_uint(((number % p) + p) % p);
+    uint32_t num = to_uint(unsigned_mod(number, p));
     while (num != 0) {
       if (num % 2 == 1)
         result = add(result, base);
@@ -158,7 +158,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   value_t pow(const value_t a, const integer_t exp) const override {
     if (a == zero())
       return zero();
-    const integer_t modded_exp = ((exp % (q - 1)) + (q - 1)) % (q - 1);
+    const integer_t modded_exp = unsigned_mod(exp, q - 1);
     return (a * to_uint(modded_exp)) % (q - 1);
   }
 
