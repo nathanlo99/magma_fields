@@ -31,8 +31,12 @@ struct LargePrimeField : Field<integer_t> {
   value_t integer(const integer_t number) const override {
     return ((number % p) + p) % p;
   }
+  uint32_t as_integer(const value_t number) const { return to_uint(number); }
   element_t operator()(const integer_t num) const {
     return element_t(*this, integer(num));
+  }
+  element_t element(const value_t value) const {
+    return element_t(*this, value);
   }
 
   value_t neg(const value_t a) const override { return a == 0 ? a : p - a; }
@@ -60,6 +64,8 @@ struct LargePrimeField : Field<integer_t> {
   // NOTE: We take the default implementations of div and pow
 
   bool eq(const value_t a, const value_t b) const override { return a == b; }
+
+  std::string to_string(const value_t a) const override { return a.get_str(); }
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const LargePrimeField &field) {

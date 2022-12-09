@@ -1,5 +1,4 @@
 
-
 #pragma once
 
 #include "field.hpp"
@@ -34,8 +33,12 @@ struct MediumPrimeField : Field<uint32_t> {
     const int64_t num = to_int(number);
     return ((num % p) + p) % p;
   }
+  uint32_t as_integer(const value_t number) const { return number; }
   element_t operator()(const integer_t num) const {
     return element_t(*this, integer(num));
+  }
+  element_t element(const value_t value) const {
+    return element_t(*this, value);
   }
 
   value_t neg(const value_t a) const override { return a == 0 ? a : p - a; }
@@ -62,6 +65,10 @@ struct MediumPrimeField : Field<uint32_t> {
   // NOTE: We take the default implementations of div and pow
 
   bool eq(const value_t a, const value_t b) const override { return a == b; }
+
+  std::string to_string(const value_t a) const override {
+    return std::to_string(a);
+  }
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const MediumPrimeField &field) {

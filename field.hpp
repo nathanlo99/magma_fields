@@ -52,6 +52,8 @@ template <class Value> struct Field : Indexed<Field<Value>> {
 
   // Element equality
   virtual bool eq(const value_t a, const value_t b) const = 0;
+
+  virtual std::string to_string(const value_t a) const = 0;
 };
 
 template <typename Field> struct FieldElement {
@@ -93,6 +95,12 @@ template <typename Field> struct FieldElement {
   element_t &operator-=(const element_t &other) {
     return *this = *this - other;
   }
+  friend element_t operator+(const element_t &a, const integer_t b) {
+    return a + a.field(b);
+  }
+  friend element_t operator+(const integer_t a, const element_t &b) {
+    return b + a;
+  }
 
   element_t inv() const { return element_t(field, field.inv(value)); }
   element_t operator*(const element_t &other) const {
@@ -124,6 +132,6 @@ template <typename Field> struct FieldElement {
   }
 
   friend std::ostream &operator<<(std::ostream &os, const FieldElement &val) {
-    return os << val.value;
+    return os << val.field.to_string(val.value);
   }
 };
