@@ -69,25 +69,19 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   std::vector<value_t> zech_table;
   const Polynomial<BaseField> &f;
 
-  ZechField(const BaseField &base_field, const integer_t p,
-            const Polynomial<BaseField> &f)
-      : p(to_uint(p)), k(f.degree()), base_field(base_field), f(f) {
+  ZechField(const BaseField &base_field, const Polynomial<BaseField> &f)
+      : p(to_uint(base_field.characteristic())), k(f.degree()),
+        base_field(base_field), f(f) {
     if (base_field != f.field)
       throw math_error()
           << "Polynomial base field did not match provided base_field";
-    if (p <= 0 || !is_prime(p))
-      throw math_error() << "Zech field expected positive prime p, got " << p;
-    if (f.field.characteristic() != p)
-      throw math_error() << "Zech field expected polynomial defined on prime "
-                            "field of characteristic "
-                         << p << ", got " << f.field;
-    if (f.field.degree() != 1)
+    if (base_field.degree() != 1)
       throw math_error()
           << "Zech field expected base field with prime order, got " << f.field;
 
-    integer_t q_tmp, max_size = 1 << 20;
-    mpz_pow_ui(q_tmp.get_mpz_t(), p.get_mpz_t(), k); // q = p^k
-    if (q_tmp >= max_size)
+    integer_t p_tmp = p, q_tmp, max_size = 1 << 20;
+    mpz_pow_ui(q_tmp.get_mpz_t(), p_tmp.get_mpz_t(), k); // q = p^k
+    if (q_tmp > max_size)
       throw math_error() << "Zech field expected cardinality at most 2^20, got "
                          << p << "^" << k << " = " << q;
     q = to_uint(q_tmp);

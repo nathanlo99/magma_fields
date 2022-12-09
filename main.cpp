@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
   {
     const auto F3 = SmallPrimeField(3);
     const auto f = Polynomial(F3, 'x', {1, 2, 0, 1});
-    const auto Z = ZechField(F3, 3, f);
+    const auto Z = ZechField(F3, f);
     std::cout << "Z = " << Z << std::endl;
     const auto x = Z.generator();
     for (int i = 0; i < Z.cardinality(); ++i) {
