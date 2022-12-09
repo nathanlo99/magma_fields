@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "util.hpp"
+#include "gmp.hpp"
 
 #include <string>
 #include <vector>

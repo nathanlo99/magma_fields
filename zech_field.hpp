@@ -3,8 +3,8 @@
 
 #include "field.hpp"
 #include "gmp.h"
+#include "gmp.hpp"
 #include "polynomial.hpp"
-#include "util.hpp"
 
 #include <iostream>
 
@@ -97,6 +97,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   value_t one() const override { return 0; }
   value_t integer(const integer_t number) const override {
     value_t result = zero(), base = one();
+    // This conversion will fit since p fits in a uint32_t
     uint32_t num = to_uint(((number % p) + p) % p);
     while (num != 0) {
       if (num % 2 == 1)
@@ -174,7 +175,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   }
 
   friend std::ostream &operator<<(std::ostream &os, const ZechField &field) {
-    return os << "ZechField over " << field.base_field
-              << " with generating polynomial " << field.f;
+    return os << "ZechField over [" << field.base_field
+              << "] with generating polynomial " << field.f;
   }
 };

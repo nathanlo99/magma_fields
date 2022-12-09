@@ -24,11 +24,3 @@ inline uint64_t to_uint(const integer_t n) {
     throw math_error() << "Could not convert " << n << " to uint: too large";
   return mpz_get_ui(n.get_mpz_t());
 }
-
-template <typename T> struct Indexed {
-  static inline size_t next_id = 0;
-  size_t m_id;
-  Indexed() { m_id = next_id++; }
-
-  bool operator==(const Indexed<T> &other) const { return m_id == other.m_id; }
-};

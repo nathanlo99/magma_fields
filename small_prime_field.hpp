@@ -2,7 +2,7 @@
 #pragma once
 
 #include "field.hpp"
-#include "util.hpp"
+#include "gmp.hpp"
 #include <cstdint>
 #include <vector>
 

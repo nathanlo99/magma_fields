@@ -1,11 +1,19 @@
 
 #pragma once
 
-#include "util.hpp"
+#include "gmp.hpp"
 
 #include <iostream>
 
 template <class Field> struct FieldElement;
+
+template <typename T> struct Indexed {
+  static inline size_t next_id = 0;
+  size_t m_id;
+  Indexed() { m_id = next_id++; }
+
+  bool operator==(const Indexed<T> &other) const { return m_id == other.m_id; }
+};
 
 template <class Value> struct Field : Indexed<Field<Value>> {
   using value_t = Value;
