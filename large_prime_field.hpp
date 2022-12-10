@@ -3,7 +3,9 @@
 
 #include "field.hpp"
 #include "gmp.hpp"
+
 #include <cstdint>
+#include <tuple>
 #include <vector>
 
 // LargePrimeField: FiniteField(p) for primes 2^32 <= p

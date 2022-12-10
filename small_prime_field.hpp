@@ -4,6 +4,7 @@
 #include "field.hpp"
 #include "gmp.hpp"
 #include <cstdint>
+#include <tuple>
 #include <vector>
 
 // SmallPrimeField: FiniteField(p) for primes 256 <= p < 65536
@@ -49,7 +50,7 @@ struct SmallPrimeField : Field<uint32_t> {
   }
 
   value_t inv(const value_t a) const override {
-    value_t r0 = p, r1 = a, s0 = 1, s1 = 0, t0 = 0, t1 = 1;
+    int32_t r0 = p, r1 = a, s0 = 1, s1 = 0, t0 = 0, t1 = 1;
     while (r1 != 0) {
       const value_t q = r0 / r1, r2 = r0 % r1;
       std::tie(r0, s0, t0, r1, s1, t1) =

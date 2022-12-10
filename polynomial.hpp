@@ -4,21 +4,21 @@
 #include "gmp.hpp"
 
 #include <string>
+#include <tuple>
 #include <vector>
 
 template <class Field = integer_t> struct Polynomial {
-  using value_t = typename Field::value_t;
   using element_t = typename Field::element_t;
 
   const Field &field;
-  const element_t zero, one;
   char variable;
+  const element_t zero, one;
   std::vector<element_t> coeffs;
 
   Polynomial(const Field &field, const char variable,
              const std::vector<element_t> &coeffs = {})
-      : field(field), zero(field.element(field.zero())),
-        one(field.element(field.one())), variable(variable), coeffs(coeffs) {
+      : field(field), variable(variable), zero(field.element(field.zero())),
+        one(field.element(field.one())), coeffs(coeffs) {
     if (coeffs.empty()) {
       this->coeffs = {zero, one};
       return;
@@ -31,17 +31,16 @@ template <class Field = integer_t> struct Polynomial {
 
 public:
   Polynomial(const Field &field, const char variable,
-             const std::vector<value_t> &coeffs)
-      : field(field), zero(field.element(field.zero())),
-        one(field.element(field.one())), variable(variable),
-        coeffs(coeffs.size(), zero) {
+             const std::vector<integer_t> &coeffs)
+      : field(field), variable(variable), zero(field.element(field.zero())),
+        one(field.element(field.one())), coeffs(coeffs.size(), zero) {
     if (coeffs.empty()) {
       this->coeffs = {zero, one};
       return;
     }
 
     for (size_t i = 0; i < coeffs.size(); ++i)
-      this->coeffs[i] = field.element(coeffs[i]);
+      this->coeffs[i] = field(coeffs[i]);
 
     // Remove leading zeroes
     while (this->coeffs.size() > 1 && this->coeffs.back() == zero)
@@ -49,8 +48,9 @@ public:
   }
 
   Polynomial(const Polynomial &other)
-      : field(other.field), zero(other.zero), one(other.one),
-        variable(other.variable), coeffs(other.coeffs) {}
+      : field(other.field), variable(other.variable),
+        zero(field.element(field.zero())), one(field.element(field.one())),
+        coeffs(other.coeffs) {}
 
   Polynomial &operator=(const Polynomial &other) {
     if (field != other.field)
@@ -125,14 +125,14 @@ public:
   friend Polynomial operator*(const Polynomial &p, const element_t k) {
     return k * p;
   }
-  friend Polynomial operator*(const value_t k, const Polynomial &p) {
-    return p * p.field.element(k);
+  friend Polynomial operator*(const integer_t k, const Polynomial &p) {
+    return p * p.field(k);
   }
-  friend Polynomial operator*(const Polynomial &p, const value_t k) {
+  friend Polynomial operator*(const Polynomial &p, const integer_t k) {
     return k * p;
   }
   Polynomial &operator*=(const element_t k) { return *this = *this * k; }
-  Polynomial &operator*=(const value_t k) { return *this = *this * k; }
+  Polynomial &operator*=(const integer_t k) { return *this = *this * k; }
 
   friend Polynomial operator*(const Polynomial &a, const Polynomial &b) {
     if (a.field != b.field)
@@ -171,10 +171,7 @@ public:
 
   friend Polynomial pow_mod(const Polynomial &f, uint64_t exp,
                             const Polynomial &mod) {
-    if (exp < 0)
-      throw math_error() << "pow_mod expected a non-negative exponent, got "
-                         << exp;
-    Polynomial result = Polynomial(f.field, 'x', {1}), base = f;
+    Polynomial result = Polynomial(f.field, 'x', {f.one}), base = f;
     // TODO: Mod out by the order q^n - 1
     while (exp != 0) {
       if (exp % 2 == 1)
@@ -186,11 +183,10 @@ public:
   }
 
   friend Polynomial inv_mod(const Polynomial &f, const Polynomial &mod) {
-    const Polynomial zero_p = Polynomial(f.field, f.variable, {f.zero}),
-                     one_p = Polynomial(f.field, f.variable, {f.one});
-    Polynomial r0 = mod, r1 = f, s0 = one_p, s1 = zero_p, t0 = zero_p,
-               t1 = one_p;
-    while (r1 != zero_p) {
+    const Polynomial zero = Polynomial(f.field, f.variable, {f.zero}),
+                     one = Polynomial(f.field, f.variable, {f.one});
+    Polynomial r0 = mod, r1 = f, s0 = one, s1 = zero, t0 = zero, t1 = one;
+    while (r1 != zero) {
       const auto &[q, r2] = divmod(r0, r1);
       std::tie(r0, s0, t0, r1, s1, t1) =
           std::make_tuple(r1, s1, t1, r2, s0 - s1 * q, t0 - t1 * q);
@@ -209,7 +205,7 @@ public:
           << p.variable << "' and '" << q.variable << "'";
 
     const size_t p_degree = p.degree(), q_degree = q.degree();
-    if (q.coeffs.back() == q.zero)
+    if (q.coeffs.back() == 0)
       throw math_error() << "Division by zero: " << p << " / " << q;
     if (p_degree < q_degree)
       return std::make_pair(Polynomial(p.field, p.variable, {p.zero}), p);

@@ -27,20 +27,22 @@ std::vector<uint32_t> compute_zech_table(const uint32_t p, const uint32_t k,
   // Compute the Zech logarithm table, find s[r] such that x^s[r] = x^r + 1
   std::vector<uint32_t> result(q, -1);
   const auto base_field = f.field;
-  const auto one = Polynomial(base_field, 'x', {1}),
-             x = Polynomial(base_field, 'x', {0, 1});
+  const auto zero = base_field.element(base_field.zero()),
+             one = base_field.element(base_field.one());
+  const auto one_p = Polynomial(base_field, 'x', {one}),
+             x_p = Polynomial(base_field, 'x', {zero, one});
 
-  Polynomial<BaseField> pow = one;
+  Polynomial<BaseField> pow = one_p;
   std::vector<uint32_t> log_x(q, q);
   std::vector<uint32_t> next_index(q, q);
   for (uint32_t exp = 0; exp + 1 < q; ++exp) {
-    if (exp > 0 && pow == one)
+    if (exp > 0 && pow == one_p)
       throw math_error() << "Given polynomial was not primitive, x^" << exp
                          << " = 1";
     const uint32_t idx = get_polynomial_index(pow);
-    next_index[exp] = get_polynomial_index(pow + one);
+    next_index[exp] = get_polynomial_index(pow + one_p);
     log_x[idx] = exp;
-    pow = (pow * x) % f;
+    pow = (pow * x_p) % f;
   }
 
   // Special cases
@@ -169,7 +171,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   std::string to_string(const value_t a) const override {
     if (a == q - 1)
       return "0";
-    const Polynomial<BaseField> x = Polynomial(base_field, 'x', {0, 1});
+    const Polynomial<BaseField> x = Polynomial(base_field, 'x');
     const Polynomial<BaseField> actual = pow_mod(x, a, f);
     return actual.to_string();
   }

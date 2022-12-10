@@ -28,11 +28,17 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   uint32_t degree() const { return k; }
   integer_t cardinality() const { return q; }
 
-  value_t zero() const { return value_t(base_field, 'x', {base_field.zero()}); }
-  value_t one() const { return value_t(base_field, 'x', {base_field.one()}); }
+  value_t zero() const {
+    return value_t(base_field, f.variable,
+                   {base_field.element(base_field.zero())});
+  }
+  value_t one() const {
+    return value_t(base_field, f.variable,
+                   {base_field.element(base_field.one())});
+  }
   value_t integer(const integer_t number) const {
     const base_element_t coeff = base_field(number);
-    return value_t(base_field, 'x', {coeff});
+    return value_t(base_field, f.variable, {coeff});
   }
   element_t operator()(const integer_t num) const {
     return element_t(*this, integer(num));
@@ -41,8 +47,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
     return element_t(*this, value);
   }
   element_t generator() const {
-    return element_t(
-        value_t(base_field, 'x', {base_field.zero(), base_field.one()}));
+    return element_t(*this, value_t(base_field, f.variable));
   }
 
   value_t neg(const value_t a) const { return (f - a) % f; }
