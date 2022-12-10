@@ -13,6 +13,8 @@
 using integer_t = mpz_class;
 using rational_t = mpq_class;
 
+namespace gmp {
+
 inline bool is_prime(const integer_t n) {
   return mpz_probab_prime_p(n.get_mpz_t(), 50);
 }
@@ -38,6 +40,14 @@ inline integer_t from_uint(const uint64_t n) {
   return result;
 }
 
+inline integer_t pow(const integer_t base, const uint64_t exp) {
+  integer_t result;
+  mpz_pow_ui(result.get_mpz_t(), base.get_mpz_t(), exp);
+  return result;
+}
+
 inline integer_t unsigned_mod(const integer_t n, const integer_t p) {
   return ((n % p) + p) % p;
 }
+
+}; // namespace gmp

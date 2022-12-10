@@ -14,8 +14,8 @@ struct SmallPrimeField : Field<uint32_t> {
 
   const value_t p;
 
-  SmallPrimeField(const integer_t p) : p(to_int(p)) {
-    if (p <= 0 || !is_prime(p))
+  SmallPrimeField(const integer_t p) : p(gmp::to_int(p)) {
+    if (p <= 0 || !gmp::is_prime(p))
       throw math_error() << "SmallPrimeField expects a positive prime, got "
                          << p;
     if (!p.fits_ushort_p())
@@ -31,7 +31,7 @@ struct SmallPrimeField : Field<uint32_t> {
   value_t zero() const override { return 0; }
   value_t one() const override { return 1; }
   value_t integer(const integer_t number) const override {
-    return to_uint(unsigned_mod(number, p));
+    return gmp::to_uint(gmp::unsigned_mod(number, p));
   }
   uint32_t as_integer(const value_t number) const { return number; }
   element_t operator()(const integer_t num) const {

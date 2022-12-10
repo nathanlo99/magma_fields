@@ -12,7 +12,7 @@ template <class BaseField>
 uint32_t get_polynomial_index(const Polynomial<BaseField> &f) {
   // Assumes the BaseField has degree 1
   const auto base_field = f.field;
-  const uint32_t p = to_uint(base_field.characteristic());
+  const uint32_t p = gmp::to_uint(base_field.characteristic());
   uint32_t result = 0;
   for (int i = f.degree(); i >= 0; --i) {
     result = result * p + base_field.as_integer(f.coeffs[i].value);
@@ -72,7 +72,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   const Polynomial<BaseField> &f;
 
   ZechField(const BaseField &base_field, const Polynomial<BaseField> &f)
-      : p(to_uint(base_field.characteristic())), k(f.degree()),
+      : p(gmp::to_uint(base_field.characteristic())), k(f.degree()),
         base_field(base_field), f(f) {
     if (base_field != f.field)
       throw math_error()
@@ -81,12 +81,12 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
       throw math_error()
           << "Zech field expected base field with prime order, got " << f.field;
 
-    integer_t p_tmp = p, q_tmp, max_size = 1 << 20;
-    mpz_pow_ui(q_tmp.get_mpz_t(), p_tmp.get_mpz_t(), k); // q = p^k
+    const integer_t q_tmp = gmp::pow(gmp::from_uint(p), k),
+                    max_size = 1_mpz << 20;
     if (q_tmp > max_size)
       throw math_error() << "Zech field expected cardinality at most 2^20, got "
                          << p << "^" << k << " = " << q;
-    q = to_uint(q_tmp);
+    q = gmp::to_uint(q_tmp);
 
     zech_table = compute_zech_table(this->p, k, q, f);
   }
@@ -100,7 +100,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   value_t integer(const integer_t number) const override {
     value_t result = zero(), base = one();
     // This conversion will fit since p fits in a uint32_t
-    uint32_t num = to_uint(unsigned_mod(number, p));
+    uint32_t num = gmp::to_uint(gmp::unsigned_mod(number, p));
     while (num != 0) {
       if (num % 2 == 1)
         result = add(result, base);
@@ -160,8 +160,8 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   value_t pow(const value_t a, const integer_t exp) const override {
     if (a == zero())
       return zero();
-    const integer_t modded_exp = unsigned_mod(exp, q - 1);
-    return (a * to_uint(modded_exp)) % (q - 1);
+    const integer_t modded_exp = gmp::unsigned_mod(exp, q - 1);
+    return (a * gmp::to_uint(modded_exp)) % (q - 1);
   }
 
   virtual bool eq(const value_t a, const value_t b) const override {

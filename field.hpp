@@ -2,6 +2,7 @@
 #pragma once
 
 #include "gmp.hpp"
+#include "prime_factorization.hpp"
 
 #include <iostream>
 
@@ -60,6 +61,26 @@ template <class Value> struct Field : Indexed<Field<Value>> {
 
   // Element equality
   virtual bool eq(const value_t a, const value_t b) const = 0;
+
+  integer_t order(const value_t c) const {
+    // Compute the product of p_i^d_i, where 0 <= d_i <= e_i is minimal such
+    // that c^((q - 1) / p_i^{e_i - d_i}) = 1
+    const integer_t p = characteristic(), q = cardinality();
+    const uint64_t k = degree();
+    assert(q == gmp::pow(p, k));
+    const Factorization factorization = factor_pk_minus_one(p, k);
+    integer_t result = 1;
+    for (const Factor &factor : factorization) {
+      for (uint64_t d = 0; d <= factor.exp; ++d) {
+        const integer_t c_exp = (q - 1) / pow(factor.base, factor.exp - d);
+        if (pow(c, c_exp) == one()) {
+          result *= pow(factor.base, d);
+          break;
+        }
+      }
+    }
+    return result;
+  }
 
   virtual std::string to_string(const value_t a) const = 0;
 };

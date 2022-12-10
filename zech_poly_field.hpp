@@ -12,14 +12,13 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
 
   const BaseField &base_field;
   const Polynomial<BaseField> &f;
-  integer_t p, q;
+  const integer_t p;
   const uint32_t k;
+  const integer_t q;
 
   ZechPolyField(const BaseField &base_field, const Polynomial<BaseField> &f)
       : base_field(base_field), f(f), p(base_field.characteristic()),
-        k(base_field.degree() * f.degree()) {
-    mpz_pow_ui(q.get_mpz_t(), p.get_mpz_t(), k); // q = p^k
-
+        k(base_field.degree() * f.degree()), q(gmp::pow(p, k)) {
     // TODO: Check that f is irreducible
     // TODO: Check that base_field is indeed ZechField
   }

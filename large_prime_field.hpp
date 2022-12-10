@@ -16,7 +16,7 @@ struct LargePrimeField : Field<integer_t> {
   const value_t p;
 
   LargePrimeField(const integer_t p) : p(p) {
-    if (p <= 0 || !is_prime(p))
+    if (p <= 0 || !gmp::is_prime(p))
       throw math_error() << "LargePrimeField expects a positive prime, got "
                          << p;
     if (p.fits_uint_p())
@@ -31,9 +31,11 @@ struct LargePrimeField : Field<integer_t> {
   value_t zero() const override { return 0; }
   value_t one() const override { return 1; }
   value_t integer(const integer_t number) const override {
-    return unsigned_mod(number, p);
+    return gmp::unsigned_mod(number, p);
   }
-  uint32_t as_integer(const value_t number) const { return to_uint(number); }
+  uint32_t as_integer(const value_t number) const {
+    return gmp::to_uint(number);
+  }
   element_t operator()(const integer_t num) const {
     return element_t(*this, integer(num));
   }

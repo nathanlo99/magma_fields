@@ -73,13 +73,8 @@ int main(int argc, char *argv[]) {
     const auto zg = F2_32.generator();
   });
 
-  timeit("Factoring", []() {
-    for (uint64_t k = 3; k < 128; ++k) {
-      for (integer_t p = 2; p < 1'000; next_prime(p)) {
-        if (pk_minus_one(p, k) > (1_mpz << 128))
-          break;
-        print_factorization(factor_pk_minus_one(p, k));
-      }
-    }
-  });
+  timeit("Factoring",
+         []() { print_factorization(factor_pk_minus_one(2, 103)); });
+
+  std::cout << gmp::pow(2_mpz, 3) << std::endl;
 }
