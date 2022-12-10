@@ -20,7 +20,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
         k(base_field.degree() * f.degree()) {
     mpz_pow_ui(q.get_mpz_t(), p.get_mpz_t(), k); // q = p^k
 
-    // TODO: Check that f is primitive
+    // TODO: Check that f is irreducible
     // TODO: Check that base_field is indeed ZechField
   }
 

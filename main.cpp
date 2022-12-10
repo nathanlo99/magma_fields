@@ -2,6 +2,7 @@
 #include "gmp.hpp"
 #include "large_prime_field.hpp"
 #include "medium_prime_field.hpp"
+#include "prime_factorization.hpp"
 #include "small_prime_field.hpp"
 #include "timing.hpp"
 #include "zech_field.hpp"
@@ -10,7 +11,11 @@
 #include <gmpxx.h>
 #include <iostream>
 
+inline void init_all() { load_cache_factorizations(); }
+
 int main(int argc, char *argv[]) {
+  init_all();
+
   timeit("Prime field of size near 2^16", []() {
     const auto F = SmallPrimeField(65521);
     const auto a = F(20000), b = F(30000);
@@ -43,14 +48,14 @@ int main(int argc, char *argv[]) {
     }
   });
 
-  timeit("Field of cardinality 2^20", []() {
-    const auto F2 = SmallPrimeField(2);
-    const auto x = Polynomial(F2, 'x');
-    const auto f = (x ^ 20) + (x ^ 3) + 1;
-    const auto Z = ZechField(F2, f);
-    std::cout << "Z = " << Z << std::endl;
-    std::cout << "Z has cardinality " << Z.cardinality() << std::endl;
-  });
+  // timeit("Field of cardinality 2^20", []() {
+  //   const auto F2 = SmallPrimeField(2);
+  //   const auto x = Polynomial(F2, 'x');
+  //   const auto f = (x ^ 20) + (x ^ 3) + 1;
+  //   const auto Z = ZechField(F2, f);
+  //   std::cout << "Z = " << Z << std::endl;
+  //   std::cout << "Z has cardinality " << Z.cardinality() << std::endl;
+  // });
 
   // Untested
   timeit("Field of cardinality 2^32", []() {
@@ -66,5 +71,14 @@ int main(int argc, char *argv[]) {
     std::cout << F2_32 << " has cardinality " << F2_32.cardinality()
               << std::endl;
     const auto zg = F2_32.generator();
+  });
+
+  timeit("Factoring", []() {
+    for (integer_t p = 2; p < 13; next_prime(p)) {
+      for (uint64_t k = 1; k < 100; ++k) {
+        std::cout << "Factoring " << p << "^" << k << " - 1" << std::endl;
+        print_factorization(factor_pk_minus_one(p, k));
+      }
+    }
   });
 }
