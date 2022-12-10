@@ -128,11 +128,14 @@ inline Factorization prime_factor(const integer_t num) {
 // Return a prime factorization of the number p^k - 1
 inline Factorization factor_pk_minus_one(const integer_t p, const uint64_t k) {
   std::cout << "Factoring " << p << "^" << k << " - 1" << std::endl;
-  const bool use_memo = p.fits_ulong_p() && pk_minus_one(p, k) > (1_mpz << 36);
+  const bool use_memo = p.fits_ulong_p();
   if (use_memo) {
     const std::pair<uint64_t, uint64_t> key = std::make_pair(to_uint(p), k);
-    if (factorization_memo.count(key) > 0)
+    if (factorization_memo.count(key) > 0) {
+      std::cout << "Grabbed factorization of " << p << "^" << k
+                << " - 1 from cache" << std::endl;
       return factorization_memo[key];
+    }
   }
 
   Factorization result;

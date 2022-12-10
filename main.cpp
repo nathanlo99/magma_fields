@@ -74,8 +74,8 @@ int main(int argc, char *argv[]) {
   });
 
   timeit("Factoring", []() {
-    for (integer_t p = 2; p < 10; next_prime(p)) {
-      for (uint64_t k = 3; k < 128; ++k) {
+    for (uint64_t k = 3; k < 128; ++k) {
+      for (integer_t p = 2; p < 1'000; next_prime(p)) {
         if (pk_minus_one(p, k) > (1_mpz << 128))
           break;
         print_factorization(factor_pk_minus_one(p, k));
