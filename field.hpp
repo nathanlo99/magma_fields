@@ -5,6 +5,7 @@
 #include "prime_factorization.hpp"
 
 #include <iostream>
+#include <string>
 
 template <class Field> struct FieldElement;
 
@@ -16,6 +17,38 @@ template <typename T> struct Indexed {
   bool operator==(const Indexed<T> &other) const { return m_id == other.m_id; }
 };
 
+enum FieldType {
+  SmallPrimeFieldType,
+  MediumPrimeFieldType,
+  LargePrimeFieldType,
+  ZechFieldType,
+  ZechPolyFieldType,
+  PrimePolyFieldType,
+  GeneralPolyFieldType,
+  OtherType,
+};
+
+inline std::string field_type_to_string(const FieldType &type) {
+  switch (type) {
+  case SmallPrimeFieldType:
+    return "SmallPrimeFieldType";
+  case MediumPrimeFieldType:
+    return "MediumPrimeFieldType";
+  case LargePrimeFieldType:
+    return "LargePrimeFieldType";
+  case ZechFieldType:
+    return "ZechFieldType";
+  case ZechPolyFieldType:
+    return "ZechPolyFieldType";
+  case PrimePolyFieldType:
+    return "PrimePolyFieldType";
+  case GeneralPolyFieldType:
+    return "GeneralPolyFieldType";
+  default:
+    return "OtherType";
+  }
+}
+
 template <class Value> struct Field : Indexed<Field<Value>> {
   using value_t = Value;
 
@@ -23,6 +56,7 @@ template <class Value> struct Field : Indexed<Field<Value>> {
   virtual integer_t characteristic() const = 0;
   virtual uint32_t degree() const = 0;
   virtual integer_t cardinality() const = 0;
+  virtual FieldType type() const = 0;
 
   // Element constructors
   virtual value_t zero() const = 0;

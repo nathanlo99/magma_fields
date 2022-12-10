@@ -23,19 +23,20 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
     // TODO: Check that base_field is indeed ZechField
   }
 
-  integer_t characteristic() const { return p; }
-  uint32_t degree() const { return k; }
-  integer_t cardinality() const { return q; }
+  integer_t characteristic() const override { return p; }
+  uint32_t degree() const override { return k; }
+  integer_t cardinality() const override { return q; }
+  FieldType type() const override { return ZechPolyFieldType; }
 
-  value_t zero() const {
+  value_t zero() const override {
     return value_t(base_field, f.variable,
                    {base_field.element(base_field.zero())});
   }
-  value_t one() const {
+  value_t one() const override {
     return value_t(base_field, f.variable,
                    {base_field.element(base_field.one())});
   }
-  value_t integer(const integer_t number) const {
+  value_t integer(const integer_t number) const override {
     const base_element_t coeff = base_field(number);
     return value_t(base_field, f.variable, {coeff});
   }
@@ -49,21 +50,29 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
     return element_t(*this, value_t(base_field, f.variable));
   }
 
-  value_t neg(const value_t a) const { return (f - a) % f; }
-  value_t add(const value_t a, const value_t b) const { return (a + b) % f; }
-  value_t sub(const value_t a, const value_t b) const {
+  value_t neg(const value_t a) const override { return (f - a) % f; }
+  value_t add(const value_t a, const value_t b) const override {
+    return (a + b) % f;
+  }
+  value_t sub(const value_t a, const value_t b) const override {
     return (a + f - b) % f;
   }
 
-  value_t inv(const value_t a) const { return inv_mod(a, f); }
-  value_t mul(const value_t a, const value_t b) const { return (a * b) % f; }
-  value_t div(const value_t a, const value_t b) const { return mul(a, inv(b)); }
+  value_t inv(const value_t a) const override { return inv_mod(a, f); }
+  value_t mul(const value_t a, const value_t b) const override {
+    return (a * b) % f;
+  }
+  value_t div(const value_t a, const value_t b) const override {
+    return mul(a, inv(b));
+  }
   // value_t pow(const value_t a, const integer_t exp) const; // Default
 
-  bool eq(const value_t a, const value_t b) const { return a == b; }
+  bool eq(const value_t a, const value_t b) const override { return a == b; }
 
   // TODO: As is, this will look absolutely disgusting
-  std::string to_string(const value_t a) const { return a.to_string(); }
+  std::string to_string(const value_t a) const override {
+    return a.to_string();
+  }
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const ZechPolyField &field) {

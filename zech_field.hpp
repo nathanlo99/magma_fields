@@ -10,9 +10,8 @@
 
 template <class BaseField>
 uint32_t get_polynomial_index(const Polynomial<BaseField> &f) {
-  // Assumes the BaseField has degree 1
   const auto base_field = f.field;
-  const uint32_t p = gmp::to_uint(base_field.characteristic());
+  const uint32_t p = gmp::to_uint(base_field.cardinality());
   uint32_t result = 0;
   for (int i = f.degree(); i >= 0; --i) {
     result = result * p + base_field.as_integer(f.coeffs[i].value);
@@ -94,6 +93,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   integer_t characteristic() const override { return p; }
   uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
+  FieldType type() const override { return ZechFieldType; }
 
   value_t zero() const override { return q - 1; }
   value_t one() const override { return 0; }
