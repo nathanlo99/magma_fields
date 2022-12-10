@@ -36,6 +36,7 @@ inline void verify_factorization(const integer_t num,
                                  const Factorization &factorization) {
   integer_t product = 1;
   for (const Factor &factor : factorization) {
+    assert(is_prime(factor.base));
     integer_t power;
     mpz_pow_ui(power.get_mpz_t(), factor.base.get_mpz_t(), factor.exp);
     product *= power;
@@ -103,17 +104,21 @@ inline Factorization combine_factorizations(const Factorization &a,
 }
 
 inline Factorization prime_factor(const integer_t num) {
-  std::cout << "Factoring " << num << std::endl;
-
   integer_t n = num;
+  std::cout << "Factoring " << n << std::endl;
+
+  if (is_prime(n))
+    return {Factor(n, 1)};
   Factorization result;
-  for (integer_t p = 2; p * p <= n && !is_prime(n); next_prime(p)) {
+  for (integer_t p = 2; p * p <= n; next_prime(p)) {
     if (n % p != 0)
       continue;
     const uint64_t exp =
         mpz_remove(n.get_mpz_t(), n.get_mpz_t(), p.get_mpz_t());
     result.push_back(Factor(p, exp));
     std::cout << "      ... " << n << std::endl;
+    if (is_prime(n))
+      break;
   }
   if (n != 1)
     result.push_back(Factor(n, 1));
@@ -122,7 +127,8 @@ inline Factorization prime_factor(const integer_t num) {
 
 // Return a prime factorization of the number p^k - 1
 inline Factorization factor_pk_minus_one(const integer_t p, const uint64_t k) {
-  const bool use_memo = p.fits_ulong_p();
+  std::cout << "Factoring " << p << "^" << k << " - 1" << std::endl;
+  const bool use_memo = p.fits_ulong_p() && pk_minus_one(p, k) > (1_mpz << 36);
   if (use_memo) {
     const std::pair<uint64_t, uint64_t> key = std::make_pair(to_uint(p), k);
     if (factorization_memo.count(key) > 0)
@@ -130,13 +136,21 @@ inline Factorization factor_pk_minus_one(const integer_t p, const uint64_t k) {
   }
 
   Factorization result;
-  if (k % 2 == 1) {
-    const integer_t n = pk_minus_one(p, k);
-    result = prime_factor(n);
-  } else {
+  if (k % 2 == 0) {
     result = factor_pk_minus_one(p, k / 2);
-    const Factorization rest = prime_factor(pk_plus_one(p, k / 2));
-    result = combine_factorizations(result, rest);
+    result =
+        combine_factorizations(result, prime_factor(pk_plus_one(p, k / 2)));
+  } else if (k % 3 == 0) {
+    const integer_t x = pk_minus_one(p, k / 3) + 1; // p^{k/3}
+    result = factor_pk_minus_one(p, k / 3);
+    result = combine_factorizations(result, prime_factor(x * x + x + 1));
+  } else if (k % 5 == 0) {
+    const integer_t x = pk_minus_one(p, k / 5) + 1; // p^{k/5}
+    result = factor_pk_minus_one(p, k / 5);
+    result = combine_factorizations(
+        result, prime_factor(x * x * x * x + x * x * x + x * x + x + 1));
+  } else {
+    result = prime_factor(pk_minus_one(p, k));
   }
 
   if (use_memo) {

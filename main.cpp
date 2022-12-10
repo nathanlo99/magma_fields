@@ -74,9 +74,10 @@ int main(int argc, char *argv[]) {
   });
 
   timeit("Factoring", []() {
-    for (integer_t p = 2; p < 13; next_prime(p)) {
-      for (uint64_t k = 1; k < 100; ++k) {
-        std::cout << "Factoring " << p << "^" << k << " - 1" << std::endl;
+    for (integer_t p = 2; p < 10; next_prime(p)) {
+      for (uint64_t k = 3; k < 128; ++k) {
+        if (pk_minus_one(p, k) > (1_mpz << 128))
+          break;
         print_factorization(factor_pk_minus_one(p, k));
       }
     }
