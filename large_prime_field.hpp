@@ -42,6 +42,13 @@ struct LargePrimeField : Field<integer_t> {
   element_t element(const value_t value) const {
     return element_t(*this, value);
   }
+  element_t primitive_element() const {
+    for (value_t c = 1; c < p; ++c) {
+      if (is_primitive(c))
+        return element_t(*this, c);
+    }
+    __builtin_unreachable();
+  }
 
   value_t neg(const value_t a) const override { return a == 0 ? a : p - a; }
   value_t add(const value_t a, const value_t b) const override {

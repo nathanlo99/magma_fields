@@ -65,6 +65,8 @@ template <class Value> struct Field : Indexed<Field<Value>> {
   integer_t order(const value_t c) const {
     // Compute the product of p_i^d_i, where 0 <= d_i <= e_i is minimal such
     // that c^((q - 1) / p_i^{e_i - d_i}) = 1
+    if (c == zero())
+      return 0;
     const integer_t p = characteristic(), q = cardinality();
     const uint64_t k = degree();
     assert(q == gmp::pow(p, k));
@@ -72,14 +74,42 @@ template <class Value> struct Field : Indexed<Field<Value>> {
     integer_t result = 1;
     for (const Factor &factor : factorization) {
       for (uint64_t d = 0; d <= factor.exp; ++d) {
-        const integer_t c_exp = (q - 1) / pow(factor.base, factor.exp - d);
+        const integer_t c_exp = (q - 1) / gmp::pow(factor.base, factor.exp - d);
         if (pow(c, c_exp) == one()) {
-          result *= pow(factor.base, d);
+          result *= gmp::pow(factor.base, d);
           break;
         }
       }
     }
+    assert(result == slow_order(c));
     return result;
+  }
+
+  // More efficient than computing the order and comparing to q - 1
+  bool is_primitive(const value_t c) const {
+    if (c == zero())
+      return false;
+    const integer_t p = characteristic(), q = cardinality();
+    const uint64_t k = degree();
+    assert(q == gmp::pow(p, k));
+    const Factorization factorization = factor_pk_minus_one(p, k);
+    for (const Factor &factor : factorization) {
+      if (pow(c, (q - 1) / factor.base) == one())
+        return false;
+    }
+    return true;
+  }
+
+  integer_t slow_order(const value_t c) const {
+    if (c == zero())
+      return 0;
+    value_t power = c;
+    integer_t exp = 1;
+    while (power != one()) {
+      power = mul(power, c);
+      exp += 1;
+    }
+    return exp;
   }
 
   virtual std::string to_string(const value_t a) const = 0;

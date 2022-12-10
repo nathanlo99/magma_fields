@@ -89,8 +89,6 @@ inline Factorization combine_factorizations(const Factorization &a,
 
 inline Factorization prime_factor(const integer_t num) {
   integer_t n = num;
-  std::cout << "Factoring " << n << std::endl;
-
   if (gmp::is_prime(n))
     return {Factor(n, 1)};
   Factorization result;
@@ -100,7 +98,6 @@ inline Factorization prime_factor(const integer_t num) {
     const uint64_t exp =
         mpz_remove(n.get_mpz_t(), n.get_mpz_t(), p.get_mpz_t());
     result.push_back(Factor(p, exp));
-    std::cout << "      ... " << n << std::endl;
     if (gmp::is_prime(n))
       break;
   }
@@ -111,14 +108,11 @@ inline Factorization prime_factor(const integer_t num) {
 
 // Return a prime factorization of the number p^k - 1
 inline Factorization factor_pk_minus_one(const integer_t p, const uint64_t k) {
-  std::cout << "Factoring " << p << "^" << k << " - 1" << std::endl;
   const bool use_memo = p.fits_ulong_p();
   if (use_memo) {
     const std::pair<uint64_t, uint64_t> key =
         std::make_pair(gmp::to_uint(p), k);
     if (factorization_memo.count(key) > 0) {
-      std::cout << "Grabbed factorization of " << p << "^" << k
-                << " - 1 from cache" << std::endl;
       return factorization_memo[key];
     }
   }

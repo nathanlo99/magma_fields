@@ -76,5 +76,9 @@ int main(int argc, char *argv[]) {
   timeit("Factoring",
          []() { print_factorization(factor_pk_minus_one(2, 103)); });
 
-  std::cout << gmp::pow(2_mpz, 3) << std::endl;
+  timeit("Order-finding", []() {
+    const auto F = MediumPrimeField(1000000007);
+    std::cout << "Primitive element in " << F << " is " << F.primitive_element()
+              << std::endl;
+  });
 }

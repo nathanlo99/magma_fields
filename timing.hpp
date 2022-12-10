@@ -23,5 +23,6 @@ inline void timeit(const std::string_view &msg, const Func &f) {
   f();
   const auto end_ms = get_time_ns();
   std::cout << "[" << msg << "] | Done in " << (end_ms - start_ms) / 1e9
-            << " seconds" << std::endl;
+            << " seconds" << std::endl
+            << std::endl;
 }
