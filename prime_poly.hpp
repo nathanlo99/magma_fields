@@ -23,7 +23,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   PrimePolyField(const BaseField &base_field, const Polynomial<BaseField> &f)
       : base_field(base_field), f(f), p(base_field.characteristic()),
         k(base_field.degree() * f.degree()), q(gmp::pow(p, k)) {
-    if (base_field.type() != SmallPrimeFieldType)
+    if (base_field.type() != FieldType::SmallPrime)
       throw math_error()
           << "PrimePolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
@@ -37,7 +37,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
       : base_field(base_field), f(base_field, variable),
         p(base_field.characteristic()), k(base_field.degree() * k),
         q(gmp::pow(p, this->k)) {
-    if (base_field.type() != SmallPrimeFieldType)
+    if (base_field.type() != FieldType::SmallPrime)
       throw math_error()
           << "PrimePolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
@@ -52,7 +52,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   integer_t characteristic() const override { return p; }
   uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
-  FieldType type() const override { return PrimePolyFieldType; }
+  FieldType type() const override { return FieldType::PrimePoly; }
 
   value_t zero() const override {
     return value_t(base_field, f.variable, {base_field.element(0)});

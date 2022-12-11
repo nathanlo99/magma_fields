@@ -111,7 +111,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
     // 2. Generate a polynomial g with full order in Z_q[x]/<f>
     do {
       g = Polynomial<BaseField>::sample(base_field, variable, k).monic();
-    } while (!g.is_primitive(f));
+    } while (!g.is_primitive_mod(f));
     log() << "Found the primitive polynomial '" << g << "'" << std::endl;
 
     // 3. Generate the Zech Table from it
@@ -121,7 +121,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   integer_t characteristic() const override { return p; }
   uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
-  FieldType type() const override { return ZechFieldType; }
+  FieldType type() const override { return FieldType::Zech; }
 
   value_t zero() const override { return q - 1; }
   value_t one() const override { return 0; }

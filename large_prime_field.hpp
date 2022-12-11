@@ -28,7 +28,7 @@ struct LargePrimeField : Field<integer_t> {
   integer_t characteristic() const override { return p; }
   uint32_t degree() const override { return 1; }
   integer_t cardinality() const override { return p; }
-  FieldType type() const override { return LargePrimeFieldType; }
+  FieldType type() const override { return FieldType::LargePrime; }
 
   value_t zero() const override { return 0; }
   value_t one() const override { return 1; }

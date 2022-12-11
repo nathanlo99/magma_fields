@@ -5,12 +5,12 @@
 #include <iostream>
 #include <sstream>
 
-enum LogFile { None, Stderr };
+enum class LogFile { None, Stderr };
 
-inline std::ostream &log(const LogFile log = Stderr) {
+inline std::ostream &log(const LogFile log = LogFile::Stderr) {
   static std::ostringstream dev_null;
   switch (log) {
-  case Stderr:
+  case LogFile::Stderr:
     return std::cerr;
   default:
     return dev_null;

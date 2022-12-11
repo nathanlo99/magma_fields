@@ -19,7 +19,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   ZechPolyField(const BaseField &base_field, const Polynomial<BaseField> &f)
       : base_field(base_field), f(f), p(base_field.characteristic()),
         k(base_field.degree() * f.degree()), q(gmp::pow(p, k)) {
-    if (base_field.type() != ZechFieldType)
+    if (base_field.type() != FieldType::Zech)
       throw math_error()
           << "ZechPolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
@@ -33,7 +33,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
       : base_field(base_field), f(base_field, variable),
         p(base_field.characteristic()), k(base_field.degree() * k),
         q(gmp::pow(p, this->k)) {
-    if (base_field.type() != ZechFieldType)
+    if (base_field.type() != FieldType::Zech)
       throw math_error()
           << "ZechPolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
@@ -45,7 +45,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   integer_t characteristic() const override { return p; }
   uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
-  FieldType type() const override { return ZechPolyFieldType; }
+  FieldType type() const override { return FieldType::ZechPoly; }
 
   value_t zero() const override {
     return value_t(base_field, f.variable,

@@ -63,7 +63,7 @@ struct Lattice {
     // 2. If the cardinality is at most 2^20, ZechField
     if (q <= (1_mpz << 20)) {
       switch (prime_field->type()) {
-      case SmallPrimeFieldType: {
+      case FieldType::SmallPrime: {
         const SmallPrimeField &P =
             dynamic_cast<SmallPrimeField &>(*prime_field);
         fields.push_back(
@@ -71,7 +71,7 @@ struct Lattice {
         return fields.back();
       }
 
-      case MediumPrimeFieldType: {
+      case FieldType::MediumPrime: {
         const MediumPrimeField &P =
             dynamic_cast<MediumPrimeField &>(*prime_field);
         fields.push_back(
@@ -79,7 +79,7 @@ struct Lattice {
         return fields.back();
       }
 
-      case LargePrimeFieldType: {
+      case FieldType::LargePrime: {
         const LargePrimeField &P =
             dynamic_cast<LargePrimeField &>(*prime_field);
         fields.push_back(
@@ -106,7 +106,7 @@ struct Lattice {
     if (best_ell == 1) {
       // None of the factors of n had p^ell <= 2^20, so return PrimePolyField
       switch (prime_field->type()) {
-      case SmallPrimeFieldType: {
+      case FieldType::SmallPrime: {
         const SmallPrimeField &S =
             dynamic_cast<SmallPrimeField &>(*prime_field);
         fields.push_back(
@@ -114,7 +114,7 @@ struct Lattice {
         return fields.back();
       }
 
-      case MediumPrimeFieldType: {
+      case FieldType::MediumPrime: {
         const MediumPrimeField &S =
             dynamic_cast<MediumPrimeField &>(*prime_field);
         fields.push_back(
@@ -122,7 +122,7 @@ struct Lattice {
         return fields.back();
       }
 
-      case LargePrimeFieldType: {
+      case FieldType::LargePrime: {
         const LargePrimeField &S =
             dynamic_cast<LargePrimeField &>(*prime_field);
         fields.push_back(
@@ -137,10 +137,10 @@ struct Lattice {
     } else {
       // Otherwise, create a two-step optimized representation
       const auto S_tmp = add_field(best_ell);
-      assert(S_tmp->type() == ZechFieldType);
+      assert(S_tmp->type() == FieldType::Zech);
 
       switch (prime_field->type()) {
-      case SmallPrimeFieldType: {
+      case FieldType::SmallPrime: {
         const ZechField<SmallPrimeField> &S =
             dynamic_cast<ZechField<SmallPrimeField> &>(*S_tmp);
         fields.push_back(
@@ -149,7 +149,7 @@ struct Lattice {
         return fields.back();
       }
 
-      case MediumPrimeFieldType: {
+      case FieldType::MediumPrime: {
         const ZechField<MediumPrimeField> &S =
             dynamic_cast<ZechField<MediumPrimeField> &>(*S_tmp);
         fields.push_back(
@@ -158,7 +158,7 @@ struct Lattice {
         return fields.back();
       }
 
-      case LargePrimeFieldType: {
+      case FieldType::LargePrime: {
         const ZechField<LargePrimeField> &S =
             dynamic_cast<ZechField<LargePrimeField> &>(*S_tmp);
         fields.push_back(

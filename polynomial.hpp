@@ -408,7 +408,7 @@ public:
   }
 
   // More efficient than computing the order and comparing to q - 1
-  bool is_primitive(const Polynomial &f) const {
+  bool is_primitive_mod(const Polynomial &f) const {
     if (*this == zero_poly())
       return false;
     const integer_t p = field.characteristic(), q = field.cardinality();

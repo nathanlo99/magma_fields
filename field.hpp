@@ -17,32 +17,32 @@ template <typename T> struct Indexed {
   bool operator==(const Indexed<T> &other) const { return m_id == other.m_id; }
 };
 
-enum FieldType {
-  SmallPrimeFieldType,
-  MediumPrimeFieldType,
-  LargePrimeFieldType,
-  ZechFieldType,
-  ZechPolyFieldType,
-  PrimePolyFieldType,
-  GeneralPolyFieldType,
-  OtherType,
+enum class FieldType {
+  SmallPrime,
+  MediumPrime,
+  LargePrime,
+  Zech,
+  ZechPoly,
+  PrimePoly,
+  GeneralPoly,
+  Other,
 };
 
 inline std::string field_type_to_string(const FieldType &type) {
   switch (type) {
-  case SmallPrimeFieldType:
+  case FieldType::SmallPrime:
     return "SmallPrimeField";
-  case MediumPrimeFieldType:
+  case FieldType::MediumPrime:
     return "MediumPrimeField";
-  case LargePrimeFieldType:
+  case FieldType::LargePrime:
     return "LargePrimeField";
-  case ZechFieldType:
+  case FieldType::Zech:
     return "ZechField";
-  case ZechPolyFieldType:
+  case FieldType::ZechPoly:
     return "ZechPolyField";
-  case PrimePolyFieldType:
+  case FieldType::PrimePoly:
     return "PrimePolyField";
-  case GeneralPolyFieldType:
+  case FieldType::GeneralPoly:
     return "GeneralPolyField";
   default:
     return "Other";
