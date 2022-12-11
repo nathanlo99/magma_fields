@@ -50,7 +50,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   element_t element(const value_t value) const {
     return element_t(*this, value);
   }
-  element_t generator() const {
+  element_t primitive_element() const {
     return element_t(*this, value_t(base_field, f.variable));
   }
 

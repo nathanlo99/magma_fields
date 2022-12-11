@@ -5,6 +5,7 @@
 #include "gmp.h"
 #include "gmp.hpp"
 #include "polynomial.hpp"
+#include "random.hpp"
 
 #include <iostream>
 
@@ -115,7 +116,11 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   element_t element(const value_t value) const {
     return element_t(*this, value);
   }
-  element_t generator() const { return element(1); } // g^1
+  element_t primitive_element() const { return element(1); } // g^1
+  // NOTE: This is not cryptographically secure or even uniform.
+  element_t random_element() const {
+    return element_t(*this, random_uint64() % q);
+  }
 
   value_t neg(const value_t a) const override {
     if (p == 2 || a == zero())

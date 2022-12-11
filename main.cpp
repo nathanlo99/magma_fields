@@ -14,7 +14,10 @@
 #include <gmpxx.h>
 #include <iostream>
 
-inline void init_all() { load_cached_factorizations(); }
+inline void init_all() {
+  load_cached_factorizations();
+  init_gmp_random_state();
+}
 
 int main(int argc, char *argv[]) {
   init_all();
@@ -45,7 +48,7 @@ int main(int argc, char *argv[]) {
     const auto f = Polynomial(F3, 'x', {1, 2, 0, 1});
     const auto Z = ZechField(F3, f);
     std::cout << "Z = " << Z << std::endl;
-    const auto x = Z.generator();
+    const auto x = Z.primitive_element();
     for (int i = 0; i < Z.cardinality(); ++i) {
       std::cout << "x^" << i << " = " << (x ^ i) << std::endl;
     }
@@ -74,11 +77,11 @@ int main(int argc, char *argv[]) {
     std::cout << F2_16 << " has cardinality " << F2_16.cardinality()
               << std::endl;
     const auto z = Polynomial(F2_16, 'z');
-    const auto g = (z ^ 2) + F2_16.generator() * z + 1;
+    const auto g = (z ^ 2) + F2_16.primitive_element() * z + 1;
     const auto F2_32 = ZechPolyField(F2_16, g);
     std::cout << F2_32 << " has cardinality " << F2_32.cardinality()
               << std::endl;
-    const auto zg = F2_32.generator();
+    const auto zg = F2_32.primitive_element();
   });
 
   timeit("Factoring",

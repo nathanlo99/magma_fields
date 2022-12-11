@@ -3,6 +3,7 @@
 
 #include "field.hpp"
 #include "gmp.hpp"
+#include "random.hpp"
 
 #include <cstdint>
 #include <tuple>
@@ -43,11 +44,20 @@ struct MediumPrimeField : Field<uint32_t> {
     return element_t(*this, value);
   }
   element_t primitive_element() const {
+    static value_t result = 0;
+    if (result != 0)
+      return element_t(*this, result);
     for (value_t c = 1; c < p; ++c) {
-      if (is_primitive(c))
-        return element_t(*this, c);
+      if (is_primitive(c)) {
+        result = c;
+        return element_t(*this, result);
+      }
     }
     __builtin_unreachable();
+  }
+  // NOTE: This is not cryptographically secure or even uniform.
+  element_t random_element() const {
+    return element_t(*this, random_uint64() % p);
   }
 
   value_t neg(const value_t a) const override { return a == 0 ? a : p - a; }
