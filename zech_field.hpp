@@ -4,6 +4,7 @@
 #include "field.hpp"
 #include "gmp.h"
 #include "gmp.hpp"
+#include "logger.hpp"
 #include "polynomial.hpp"
 #include "random.hpp"
 
@@ -23,26 +24,24 @@ uint32_t get_polynomial_index(const Polynomial<BaseField> &f) {
 template <class BaseField>
 std::vector<uint32_t> compute_zech_table(const uint32_t p, const uint32_t k,
                                          const uint32_t q,
-                                         const Polynomial<BaseField> &f) {
+                                         const Polynomial<BaseField> &f,
+                                         const Polynomial<BaseField> &g) {
   // Compute the Zech logarithm table, find s[r] such that x^s[r] = x^r + 1
   std::vector<uint32_t> result(q, -1);
   const auto base_field = f.field;
-  const auto zero = base_field.element(base_field.zero()),
-             one = base_field.element(base_field.one());
-  const auto one_p = Polynomial(base_field, 'x', {one}),
-             x_p = Polynomial(base_field, 'x', {zero, one});
+  const auto one = f.one_poly();
 
-  Polynomial<BaseField> pow = one_p;
+  Polynomial<BaseField> pow = one;
   std::vector<uint32_t> log_x(q, q);
   std::vector<uint32_t> next_index(q, q);
   for (uint32_t exp = 0; exp + 1 < q; ++exp) {
-    if (exp > 0 && pow == one_p)
-      throw math_error() << "Given polynomial was not primitive, x^" << exp
+    if (exp > 0 && pow == one)
+      throw math_error() << "Given polynomial was not primitive, g^" << exp
                          << " = 1";
     const uint32_t idx = get_polynomial_index(pow);
-    next_index[exp] = get_polynomial_index(pow + one_p);
+    next_index[exp] = get_polynomial_index(pow + one);
     log_x[idx] = exp;
-    pow = (pow * x_p) % f;
+    pow = (pow * g) % f;
   }
 
   // Special cases
@@ -69,26 +68,54 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   uint32_t p, k, q;
   const BaseField &base_field;
   std::vector<value_t> zech_table;
-  const Polynomial<BaseField> &f;
+  Polynomial<BaseField> f, g;
 
   ZechField(const BaseField &base_field, const Polynomial<BaseField> &f)
       : p(gmp::to_uint(base_field.characteristic())), k(f.degree()),
-        base_field(base_field), f(f) {
+        q(gmp::to_uint(gmp::pow(gmp::from_uint(p), k))), base_field(base_field),
+        f(f), g(f.field, f.variable) {
     if (base_field != f.field)
       throw math_error()
           << "Polynomial base field did not match provided base_field";
     if (base_field.degree() != 1)
       throw math_error()
           << "Zech field expected base field with prime order, got " << f.field;
-
-    const integer_t q_tmp = gmp::pow(gmp::from_uint(p), k),
-                    max_size = 1_mpz << 20;
-    if (q_tmp > max_size)
+    if (q > (1_mpz << 20))
       throw math_error() << "Zech field expected cardinality at most 2^20, got "
                          << p << "^" << k << " = " << q;
-    q = gmp::to_uint(q_tmp);
+    zech_table = compute_zech_table(this->p, k, q, f, g);
+  }
 
-    zech_table = compute_zech_table(this->p, k, q, f);
+  ZechField(const BaseField &base_field, const char variable, const uint64_t k)
+      : p(gmp::to_uint(base_field.characteristic())), k(k),
+        q(gmp::to_uint(gmp::pow(gmp::from_uint(p), k))), base_field(base_field),
+        f(base_field, variable), g(base_field, variable) {
+    if (base_field != f.field)
+      throw math_error()
+          << "Polynomial base field did not match provided base_field";
+    if (base_field.degree() != 1)
+      throw math_error()
+          << "Zech field expected base field with prime order, got " << f.field;
+    if (q > (1_mpz << 20))
+      throw math_error() << "Zech field expected cardinality at most 2^20, got "
+                         << p << "^" << k << " = " << q;
+
+    log() << "Creating a ZechField over base_field " << base_field << std::endl;
+    // 1. Generate a irreducible polynomial f of degree k
+    do {
+      f = Polynomial<BaseField>::sample(base_field, variable, k).monic();
+    } while (f.degree() != k || !f.is_irreducible_rabin());
+    log() << "Found the irreducible polynomial '" << f << "' of degree " << k
+          << std::endl;
+
+    // 2. Generate a polynomial g with full order in Z_q[x]/<f>
+    do {
+      g = Polynomial<BaseField>::sample(base_field, variable, k).monic();
+    } while (!g.is_primitive(f));
+    log() << "Found the primitive polynomial '" << g << "'" << std::endl;
+
+    // 3. Generate the Zech Table from it
+    zech_table = compute_zech_table(this->p, k, q, f, g);
   }
 
   integer_t characteristic() const override { return p; }
@@ -116,7 +143,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   element_t element(const value_t value) const {
     return element_t(*this, value);
   }
-  element_t primitive_element() const { return element(1); } // g^1
+  element_t primitive_element() const { return element_t(*this, 1); }
   // NOTE: This is not cryptographically secure or even uniform.
   element_t random_element() const {
     return element_t(*this, random_uint64() % q);
@@ -176,8 +203,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   std::string to_string(const value_t a) const override {
     if (a == q - 1)
       return "0";
-    const Polynomial<BaseField> x = Polynomial(base_field, 'x');
-    const Polynomial<BaseField> actual = pow_mod(x, a, f);
+    const Polynomial<BaseField> actual = pow_mod(g, a, f);
     return actual.to_string();
   }
 

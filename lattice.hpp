@@ -1,35 +1,22 @@
 
 #pragma once
 
+#include "error.hpp"
 #include "field.hpp"
 #include "gmp.hpp"
 #include "large_prime_field.hpp"
 #include "medium_prime_field.hpp"
+#include "prime_poly.hpp"
 #include "small_prime_field.hpp"
 #include "zech_field.hpp"
 #include "zech_poly_field.hpp"
 
 #include <array>
 #include <cstdint>
+#include <iostream>
 #include <map>
 #include <utility>
 #include <vector>
-
-// Returns the largest k such that p^k <= 2^20 = (1024)^2
-inline uint32_t get_largest_power_for_zech_field(const integer_t p) {
-  if (p >= 1024)
-    return 1;
-  if (p >= 103)
-    return 2;
-  if (p >= 37)
-    return 3;
-  if (p >= 17)
-    return 4;
-  if (p >= 11)
-    return 5;
-  constexpr std::array<uint32_t, 8> lookup_table = {0, 0, 20, 12, 0, 8, 0, 7};
-  return lookup_table[gmp::to_uint(p)];
-}
 
 struct Lattice {
   const integer_t p;
@@ -68,18 +55,41 @@ struct Lattice {
 
     // Otherwise, if we get here, we better already have a prime field
     assert(fields.size() >= 1);
-    const auto prime_field = fields[0];
+    AbstractField *prime_field = fields[0].get();
 
     const integer_t q = gmp::pow(p, k);
-    // 2.
+    // 2. If the cardinality is at most 2^20, ZechField
     if (q <= (1_mpz << 20)) {
-      // TODO: Fix this or write a ZechField constructor which finds an
-      // irreducible polynomial automatically
-      // fields.push_back(std::make_shared<ZechField>(*prime_field, k));
-      // return fields.back();
-      return nullptr;
+      switch (prime_field->type()) {
+      case SmallPrimeFieldType: {
+        const SmallPrimeField &P =
+            *dynamic_cast<SmallPrimeField *>(prime_field);
+        fields.push_back(
+            std::make_shared<ZechField<SmallPrimeField>>(P, 'z', k));
+      } break;
+
+      case MediumPrimeFieldType: {
+        const MediumPrimeField &P =
+            *dynamic_cast<MediumPrimeField *>(prime_field);
+        fields.push_back(
+            std::make_shared<ZechField<MediumPrimeField>>(P, 'z', k));
+      } break;
+
+      case LargePrimeFieldType: {
+        const LargePrimeField &P =
+            *dynamic_cast<LargePrimeField *>(prime_field);
+        fields.push_back(
+            std::make_shared<ZechField<LargePrimeField>>(P, 'z', k));
+      } break;
+
+      default:
+        throw math_error()
+            << "Prime field was not actually of prime field type";
+      }
+      return fields.back();
     }
 
+    // 3. Two-step optimized representation
     uint32_t best_ell = 1;
     for (uint32_t ell = 2; ell < k; ++ell) {
       if (gmp::pow(p, ell) > (1_mpz << 20))
@@ -87,14 +97,82 @@ struct Lattice {
       if (k % ell == 0)
         best_ell = ell;
     }
+
     if (best_ell == 1) {
-      // TODO: Return PrimePolyField
+      // None of the factors of n had p^ell <= 2^20, so return PrimePolyField
+      switch (prime_field->type()) {
+      case SmallPrimeFieldType: {
+        const SmallPrimeField &S =
+            *dynamic_cast<SmallPrimeField *>(prime_field);
+        fields.push_back(
+            std::make_shared<PrimePolyField<SmallPrimeField>>(S, 'z', k));
+      } break;
+
+      case MediumPrimeFieldType: {
+        const MediumPrimeField &S =
+            *dynamic_cast<MediumPrimeField *>(prime_field);
+        fields.push_back(
+            std::make_shared<PrimePolyField<MediumPrimeField>>(S, 'z', k));
+      } break;
+
+      case LargePrimeFieldType: {
+        const LargePrimeField &S =
+            *dynamic_cast<LargePrimeField *>(prime_field);
+        fields.push_back(
+            std::make_shared<PrimePolyField<LargePrimeField>>(S, 'z', k));
+      } break;
+
+      default:
+        throw math_error()
+            << "Prime field was not actually of prime field type";
+      }
+      return fields.back();
+
     } else {
-      const auto S = add_field(best_ell);
-      // assert(S->type() == ZechFieldType);
-      // TODO: Return ZechPolyField of degree k / best_ell over S
+      // Otherwise, create a two-step optimized representation
+      const auto S_tmp = add_field(best_ell);
+      assert(S_tmp->type() == ZechFieldType);
+
+      switch (prime_field->type()) {
+      case SmallPrimeFieldType: {
+        const ZechField<SmallPrimeField> &S =
+            *dynamic_cast<ZechField<SmallPrimeField> *>(prime_field);
+        fields.push_back(
+            std::make_shared<ZechPolyField<ZechField<SmallPrimeField>>>(
+                S, 'z', k / best_ell));
+      } break;
+
+      case MediumPrimeFieldType: {
+        const ZechField<MediumPrimeField> &S =
+            *dynamic_cast<ZechField<MediumPrimeField> *>(prime_field);
+        fields.push_back(
+            std::make_shared<ZechPolyField<ZechField<MediumPrimeField>>>(
+                S, 'z', k / best_ell));
+      } break;
+
+      case LargePrimeFieldType: {
+        const ZechField<LargePrimeField> &S =
+            *dynamic_cast<ZechField<LargePrimeField> *>(prime_field);
+        fields.push_back(
+            std::make_shared<ZechPolyField<ZechField<LargePrimeField>>>(
+                S, 'z', k / best_ell));
+      } break;
+
+      default:
+        throw math_error()
+            << "Prime field was not actually of prime field type";
+      }
     }
     return nullptr;
+  }
+
+  friend std::ostream &operator<<(std::ostream &os, const Lattice &lattice) {
+    // TODO: Move logic unrelated to values to AbstractField so we can print
+    // them
+    for (const auto &field : lattice.fields) {
+      std::cout << " - Field with unknown properties at " << field << std::endl;
+    }
+    return os;
   }
 };
 
@@ -111,5 +189,17 @@ struct LatticeManager {
       lattices[p] = std::make_shared<Lattice>(p);
     const auto lattice = lattices.at(p);
     return lattice->add_field(k);
+  }
+
+  friend std::ostream &operator<<(std::ostream &os,
+                                  const LatticeManager &manager) {
+    os << std::endl;
+    os << "------- LATTICES -------" << std::endl;
+    for (const auto &[p, lattice] : manager.lattices) {
+      os << "Lattice for prime " << p << ": " << std::endl;
+      os << *lattice << std::endl << std::endl;
+    }
+    os << "------------------------" << std::endl;
+    return os;
   }
 };

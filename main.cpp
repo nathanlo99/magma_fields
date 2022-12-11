@@ -22,26 +22,26 @@ inline void init_all() {
 int main(int argc, char *argv[]) {
   init_all();
 
-  timeit("Prime field of size near 2^16", []() {
-    const auto F = SmallPrimeField(65521);
-    const auto a = F(20000), b = F(30000);
-    std::cout << "In " << F << ", " << std::endl;
-    std::cout << a << " * " << b << " = " << a * b << std::endl;
-  });
+  // timeit("Prime field of size near 2^16", []() {
+  //   const auto F = SmallPrimeField(65521);
+  //   const auto a = F(20000), b = F(30000);
+  //   std::cout << "In " << F << ", " << std::endl;
+  //   std::cout << a << " * " << b << " = " << a * b << std::endl;
+  // });
 
-  timeit("Prime field of medium size", []() {
-    const auto F = MediumPrimeField(100003);
-    const auto a = F(20000), b = F(30000);
-    std::cout << "In " << F << ", " << std::endl;
-    std::cout << a << " * " << b << " = " << a * b << std::endl;
-  });
+  // timeit("Prime field of medium size", []() {
+  //   const auto F = MediumPrimeField(100003);
+  //   const auto a = F(20000), b = F(30000);
+  //   std::cout << "In " << F << ", " << std::endl;
+  //   std::cout << a << " * " << b << " = " << a * b << std::endl;
+  // });
 
-  timeit("Prime field of size over 2^32", []() {
-    const auto F = LargePrimeField(4294967311);
-    const auto a = F(20000), b = F(30000);
-    std::cout << "In " << F << ", " << std::endl;
-    std::cout << a << " * " << b << " = " << a * b << std::endl;
-  });
+  // timeit("Prime field of size over 2^32", []() {
+  //   const auto F = LargePrimeField(4294967311);
+  //   const auto a = F(20000), b = F(30000);
+  //   std::cout << "In " << F << ", " << std::endl;
+  //   std::cout << a << " * " << b << " = " << a * b << std::endl;
+  // });
 
   timeit("Field of cardinality 3^3", []() {
     const auto F3 = SmallPrimeField(3);
@@ -84,61 +84,70 @@ int main(int argc, char *argv[]) {
     const auto zg = F2_32.primitive_element();
   });
 
-  timeit("Factoring",
-         []() { print_factorization(factor_pk_minus_one(2, 127)); });
+  // timeit("Factoring",
+  //        []() { print_factorization(factor_pk_minus_one(2, 127)); });
 
-  timeit("Order-finding", []() {
-    const auto F = MediumPrimeField(1000000007);
-    std::cout << "Primitive element in " << F << " is " << F.primitive_element()
-              << std::endl;
-  });
-
-  // timeit("Debug demo", []() {
-  //   LatticeManager manager;
-  //   const auto F = manager.FiniteField(3, 4);
+  // timeit("Order-finding", []() {
+  //   const auto F = MediumPrimeField(1000000007);
+  //   std::cout << "Primitive element in " << F << " is " <<
+  //   F.primitive_element() << std::endl;
   // });
 
-  timeit("Polynomial gcd's", []() {
-    const auto F = SmallPrimeField(127);
-    const auto x = Polynomial(F, 'x');
-    const auto f = (x ^ 2) + 7 * x + 6;
-    std::cout << f << std::endl;
-    const auto g = (x ^ 2) - 5 * x - 6;
-    std::cout << g << std::endl;
-    const auto gcd = polynomial_gcd(f, g);
-    std::cout << "The gcd of " << f << " and " << g << " is " << gcd
-              << std::endl;
+  timeit("Debug demo", []() {
+    LatticeManager manager;
+    const auto F = manager.FiniteField(3, 4);
+    std::cout << manager << std::endl;
   });
 
-  timeit("Rabin irreducibility algorithm", []() {
-    const integer_t p = 2;
-    const auto F = SmallPrimeField(p);
-    for (uint64_t degree = 1; degree <= 11; ++degree) {
-      std::cout << "For degree " << degree << "... " << std::endl;
-      uint64_t least_support = degree + 2;
-      Polynomial best_polynomial = Polynomial(F, 'x');
-      uint64_t num_irreducible = 0;
-      for (integer_t iter = 0; iter < gmp::pow(p, degree + 1); ++iter) {
-        std::vector<integer_t> coeffs(degree + 1);
-        integer_t coeff_idx = iter;
-        for (size_t i = 0; i <= degree; ++i) {
-          coeffs[i] = coeff_idx % p;
-          coeff_idx /= p;
-        }
-        if (coeffs[degree] == 0 || coeffs[0] == 0)
-          continue;
-        const Polynomial f = Polynomial(F, 'x', coeffs);
-        if (!f.is_irreducible_rabin())
-          continue;
-        num_irreducible++;
-        if (f.support.size() < least_support) {
-          least_support = f.support.size();
-          best_polynomial = f;
-        }
-      }
-      std::cout << num_irreducible
-                << " irreducible polynomials, with shortest = "
-                << best_polynomial << std::endl;
-    }
-  });
+  // timeit("Polynomial gcd's", []() {
+  //   const auto F = SmallPrimeField(127);
+  //   const auto x = Polynomial(F, 'x');
+  //   const auto f = (x ^ 2) + 7 * x + 6;
+  //   std::cout << f << std::endl;
+  //   const auto g = (x ^ 2) - 5 * x - 6;
+  //   std::cout << g << std::endl;
+  //   const auto gcd = polynomial_gcd(f, g);
+  //   std::cout << "The gcd of " << f << " and " << g << " is " << gcd
+  //             << std::endl;
+  // });
+
+  // timeit("Rabin irreducibility algorithm", []() {
+  //   const integer_t p = 2;
+  //   const auto F = SmallPrimeField(p);
+  //   for (uint64_t degree = 1; degree <= 11; ++degree) {
+  //     std::cout << "For degree " << degree << "... " << std::flush;
+  //     uint64_t least_support = degree + 2;
+  //     Polynomial best_polynomial = Polynomial(F, 'x');
+  //     uint64_t num_irreducible = 0;
+  //     for (integer_t iter = 0; iter < gmp::pow(p, degree + 1); ++iter) {
+  //       std::vector<integer_t> coeffs(degree + 1);
+  //       integer_t coeff_idx = iter;
+  //       for (size_t i = 0; i <= degree; ++i) {
+  //         coeffs[i] = coeff_idx % p;
+  //         coeff_idx /= p;
+  //       }
+  //       if (coeffs[degree] == 0 || coeffs[0] == 0)
+  //         continue;
+  //       const Polynomial f = Polynomial(F, 'x', coeffs);
+  //       if (!f.is_irreducible_rabin())
+  //         continue;
+  //       num_irreducible++;
+  //       if (f.support.size() < least_support) {
+  //         least_support = f.support.size();
+  //         best_polynomial = f;
+  //       }
+  //     }
+  //     std::cout << num_irreducible
+  //               << " irreducible polynomials, with shortest = "
+  //               << best_polynomial << std::endl;
+  //   }
+  // });
+
+  // timeit("Generating random polynomials", []() {
+  //   const auto F = SmallPrimeField(5);
+  //   for (int i = 0; i < 10; ++i) {
+  //     const Polynomial p = Polynomial<decltype(F)>::sample(F, 'x', 4);
+  //     std::cout << p << std::endl;
+  //   }
+  // });
 }

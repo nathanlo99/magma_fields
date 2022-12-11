@@ -11,7 +11,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   using element_t = FieldElement<ZechPolyField>;
 
   const BaseField &base_field;
-  const Polynomial<BaseField> &f;
+  Polynomial<BaseField> f;
   const integer_t p;
   const uint32_t k;
   const integer_t q;
@@ -19,12 +19,27 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   ZechPolyField(const BaseField &base_field, const Polynomial<BaseField> &f)
       : base_field(base_field), f(f), p(base_field.characteristic()),
         k(base_field.degree() * f.degree()), q(gmp::pow(p, k)) {
-    // TODO: Check that f is irreducible
-
     if (base_field.type() != ZechFieldType)
       throw math_error()
-          << "ZechPolyField expected ZechField as base field, got "
+          << "ZechPolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
+    if (!f.is_irreducible_rabin())
+      throw math_error()
+          << "ZechPolyField expected irreducible polynomial, got " << f;
+  }
+
+  ZechPolyField(const BaseField &base_field, const char variable,
+                const uint64_t k)
+      : base_field(base_field), f(base_field, variable),
+        p(base_field.characteristic()), k(base_field.degree() * k),
+        q(gmp::pow(p, this->k)) {
+    if (base_field.type() != ZechFieldType)
+      throw math_error()
+          << "ZechPolyField expected SmallPrimeField as base field, got "
+          << field_type_to_string(base_field.type());
+    do {
+      f = Polynomial<BaseField>::sample(base_field, variable, k).monic();
+    } while (f.coeffs[k] == f.zero || !f.is_irreducible_rabin());
   }
 
   integer_t characteristic() const override { return p; }
@@ -52,6 +67,11 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   }
   element_t primitive_element() const {
     return element_t(*this, value_t(base_field, f.variable));
+  }
+  element_t random_element() const {
+    const auto random_poly =
+        Polynomial<BaseField>::sample(base_field, f.variable, k);
+    return element_t(*this, random_poly);
   }
 
   value_t neg(const value_t a) const override { return (f - a) % f; }

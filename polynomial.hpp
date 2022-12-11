@@ -8,7 +8,7 @@
 #include <tuple>
 #include <vector>
 
-template <class Field = integer_t> struct Polynomial {
+template <class Field> struct Polynomial {
   using element_t = typename Field::element_t;
 
   const Field &field;
@@ -112,6 +112,13 @@ public:
   }
   inline Polynomial one_poly() const {
     return Polynomial(field, variable, {one}, {0});
+  }
+  static inline Polynomial sample(const Field &field, const char variable,
+                                  const uint64_t degree) {
+    std::vector<element_t> coeffs(degree + 1, field.element(field.zero()));
+    for (size_t i = 0; i <= degree; ++i)
+      coeffs[i] = field.random_element();
+    return Polynomial(field, variable, coeffs);
   }
 
   inline Polynomial monic() const {
@@ -397,5 +404,20 @@ public:
     }
     const Polynomial h = (pow_mod(x, gmp::pow(q, n), f) + f - x) % f;
     return h == f.zero_poly();
+  }
+
+  // More efficient than computing the order and comparing to q - 1
+  bool is_primitive(const Polynomial &f) const {
+    if (*this == zero_poly())
+      return false;
+    const integer_t p = field.characteristic(), q = field.cardinality();
+    const uint64_t k = field.degree(), n = f.degree();
+    const integer_t full_order = gmp::pow(p, k * n) - 1;
+    const Factorization factorization = factor_pk_minus_one(p, k * n);
+    for (const Factor &factor : factorization) {
+      if (pow_mod(*this, full_order / factor.base, f) == one_poly())
+        return false;
+    }
+    return true;
   }
 };
