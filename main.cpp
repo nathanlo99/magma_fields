@@ -5,6 +5,7 @@
 #include "medium_prime_field.hpp"
 #include "prime_factorization.hpp"
 #include "prime_poly.hpp"
+#include "random.hpp"
 #include "small_prime_field.hpp"
 #include "timing.hpp"
 #include "zech_field.hpp"
@@ -104,5 +105,37 @@ int main(int argc, char *argv[]) {
     const auto gcd = polynomial_gcd(f, g);
     std::cout << "The gcd of " << f << " and " << g << " is " << gcd
               << std::endl;
+  });
+
+  timeit("Rabin irreducibility algorithm", []() {
+    const integer_t p = 2;
+    const auto F = SmallPrimeField(p);
+    for (uint64_t degree = 1; degree <= 11; ++degree) {
+      std::cout << "For degree " << degree << "... " << std::endl;
+      uint64_t least_support = degree + 2;
+      Polynomial best_polynomial = Polynomial(F, 'x');
+      uint64_t num_irreducible = 0;
+      for (integer_t iter = 0; iter < gmp::pow(p, degree + 1); ++iter) {
+        std::vector<integer_t> coeffs(degree + 1);
+        integer_t coeff_idx = iter;
+        for (size_t i = 0; i <= degree; ++i) {
+          coeffs[i] = coeff_idx % p;
+          coeff_idx /= p;
+        }
+        if (coeffs[degree] == 0 || coeffs[0] == 0)
+          continue;
+        const Polynomial f = Polynomial(F, 'x', coeffs);
+        if (!f.is_irreducible_rabin())
+          continue;
+        num_irreducible++;
+        if (f.support.size() < least_support) {
+          least_support = f.support.size();
+          best_polynomial = f;
+        }
+      }
+      std::cout << num_irreducible
+                << " irreducible polynomials, with shortest = "
+                << best_polynomial << std::endl;
+    }
   });
 }

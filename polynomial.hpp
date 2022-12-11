@@ -2,6 +2,7 @@
 #pragma once
 
 #include "gmp.hpp"
+#include "prime_factorization.hpp"
 
 #include <string>
 #include <tuple>
@@ -243,7 +244,7 @@ public:
     return result;
   }
 
-  friend Polynomial pow_mod(const Polynomial &f, uint64_t exp,
+  friend Polynomial pow_mod(const Polynomial &f, integer_t exp,
                             const Polynomial &mod) {
     Polynomial result = f.one_poly(), base = f;
     // TODO: Mod out by the order q^n - 1
@@ -273,28 +274,6 @@ public:
           std::make_tuple(r1, s1, t1, r2, s0 - s1 * q, t0 - t1 * q);
     }
     return (t0 + mod) % mod;
-  }
-
-  friend Polynomial polynomial_gcd(const Polynomial &f, const Polynomial &g) {
-    if (f.field != g.field)
-      throw math_error()
-          << "Cannot compute gcd of polynomials over different fields";
-    if (f.variable != g.variable)
-      throw math_error()
-          << "Cannot compute gcd of polynomials with two different variables '"
-          << f.variable << "' and '" << g.variable << "'";
-
-    Polynomial a = f, b = g;
-    const Polynomial zero_poly(f.field, f.variable,
-                               {f.field.element(f.field.zero())});
-    while (true) {
-      if (b == zero_poly)
-        return a.monic();
-      a = a % b;
-      if (a == zero_poly)
-        return b.monic();
-      b = b % a;
-    }
   }
 
   friend std::pair<Polynomial, Polynomial> divmod(const Polynomial &p,
@@ -369,5 +348,54 @@ public:
         os << "^" << d;
     }
     return os;
+  }
+
+  friend Polynomial polynomial_gcd(const Polynomial &f, const Polynomial &g) {
+    if (f.field != g.field)
+      throw math_error()
+          << "Cannot compute gcd of polynomials over different fields";
+    if (f.variable != g.variable)
+      throw math_error()
+          << "Cannot compute gcd of polynomials with two different variables '"
+          << f.variable << "' and '" << g.variable << "'";
+
+    Polynomial a = f, b = g;
+    const Polynomial zero_poly(f.field, f.variable,
+                               {f.field.element(f.field.zero())});
+    while (true) {
+      if (b == zero_poly)
+        return a.monic();
+      a = a % b;
+      if (a == zero_poly)
+        return b.monic();
+      b = b % a;
+    }
+  }
+
+  bool is_irreducible_rabin() const {
+    if (*this == zero_poly())
+      return false;
+    const Polynomial f = monic();
+    const integer_t q = f.field.cardinality();
+    const uint64_t n = f.degree();
+
+    // 1. Find the prime factors of n
+    // 2. For each prime factor pi
+    //    a. Compute ni = n / pi
+    //    b. Compute h = (x^(q^ni) - x) mod f
+    //    c. If gcd(f, h) != 1, return false
+    // 3. If (x^(q^n) - x) mod f = 0, return true
+    // 4. Otherwise, return false
+
+    const Polynomial x = Polynomial(f.field, f.variable);
+    for (const Factor &factor : prime_factor(gmp::from_uint(n))) {
+      const uint64_t pi = gmp::to_uint(factor.base), ni = n / pi;
+      const Polynomial h = (pow_mod(x, gmp::pow(q, ni), f) + f - x) % f;
+      const Polynomial g = polynomial_gcd(f, h);
+      if (g != f.one_poly())
+        return false;
+    }
+    const Polynomial h = (pow_mod(x, gmp::pow(q, n), f) + f - x) % f;
+    return h == f.zero_poly();
   }
 };
