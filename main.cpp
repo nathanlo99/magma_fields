@@ -1,8 +1,10 @@
 
 #include "gmp.hpp"
 #include "large_prime_field.hpp"
+#include "lattice.hpp"
 #include "medium_prime_field.hpp"
 #include "prime_factorization.hpp"
+#include "prime_poly.hpp"
 #include "small_prime_field.hpp"
 #include "timing.hpp"
 #include "zech_field.hpp"
@@ -11,7 +13,7 @@
 #include <gmpxx.h>
 #include <iostream>
 
-inline void init_all() { load_cache_factorizations(); }
+inline void init_all() { load_cached_factorizations(); }
 
 int main(int argc, char *argv[]) {
   init_all();
@@ -48,14 +50,19 @@ int main(int argc, char *argv[]) {
     }
   });
 
-  // timeit("Field of cardinality 2^20", []() {
-  //   const auto F2 = SmallPrimeField(2);
-  //   const auto x = Polynomial(F2, 'x');
-  //   const auto f = (x ^ 20) + (x ^ 3) + 1;
-  //   const auto Z = ZechField(F2, f);
-  //   std::cout << "Z = " << Z << std::endl;
-  //   std::cout << "Z has cardinality " << Z.cardinality() << std::endl;
-  // });
+  timeit("Field of cardinality 2^5", []() {
+    const auto F2 = SmallPrimeField(2);
+    const auto x = Polynomial(F2, 'x');
+    const auto f = (x ^ 5) + (x ^ 2) + 1;
+    const auto GF = PrimePolyField(F2, f);
+    std::cout << "GF = " << GF << std::endl;
+    std::cout << "GF has cardinality " << GF.cardinality() << std::endl;
+
+    const auto x_GF = GF.element(x);
+    for (int i = 0; i < GF.cardinality(); ++i) {
+      std::cout << "x^" << i << " = " << (x_GF ^ i) << std::endl;
+    }
+  });
 
   // Untested
   timeit("Field of cardinality 2^32", []() {
@@ -74,11 +81,16 @@ int main(int argc, char *argv[]) {
   });
 
   timeit("Factoring",
-         []() { print_factorization(factor_pk_minus_one(2, 103)); });
+         []() { print_factorization(factor_pk_minus_one(2, 127)); });
 
   timeit("Order-finding", []() {
     const auto F = MediumPrimeField(1000000007);
     std::cout << "Primitive element in " << F << " is " << F.primitive_element()
               << std::endl;
+  });
+
+  timeit("Debug demo", []() {
+    LatticeManager manager;
+    const auto F = manager.FiniteField(3, 4);
   });
 }

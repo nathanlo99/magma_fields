@@ -49,14 +49,19 @@ inline std::string field_type_to_string(const FieldType &type) {
   }
 }
 
-template <class Value> struct Field : Indexed<Field<Value>> {
+struct AbstractField {
+  virtual FieldType type() const = 0;
+};
+
+template <class Value> struct Field : Indexed<Field<Value>>, AbstractField {
   using value_t = Value;
+
+  virtual ~Field() {}
 
   // Field properties
   virtual integer_t characteristic() const = 0;
   virtual uint32_t degree() const = 0;
   virtual integer_t cardinality() const = 0;
-  virtual FieldType type() const = 0;
 
   // Element constructors
   virtual value_t zero() const = 0;

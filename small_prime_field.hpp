@@ -7,7 +7,7 @@
 #include <tuple>
 #include <vector>
 
-// SmallPrimeField: FiniteField(p) for primes 256 <= p < 65536
+// SmallPrimeField: FiniteField(p) for primes p < 65536
 struct SmallPrimeField : Field<uint32_t> {
   using value_t = uint32_t;
   using element_t = FieldElement<SmallPrimeField>;

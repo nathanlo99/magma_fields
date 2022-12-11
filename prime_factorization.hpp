@@ -31,7 +31,7 @@ inline void verify_factorization(const integer_t num,
 constexpr std::string_view factorization_table_filename =
     "tables/prime_factorizations.txt";
 inline FactorizationMemo factorization_memo;
-inline void load_cache_factorizations() {
+inline void load_cached_factorizations() {
   std::ifstream ifs(factorization_table_filename);
   std::string line;
   while (std::getline(ifs, line)) {
@@ -97,12 +97,12 @@ inline Factorization prime_factor(const integer_t num) {
       continue;
     const uint64_t exp =
         mpz_remove(n.get_mpz_t(), n.get_mpz_t(), p.get_mpz_t());
-    result.push_back(Factor(p, exp));
+    result.emplace_back(p, exp);
     if (gmp::is_prime(n))
       break;
   }
   if (n != 1)
-    result.push_back(Factor(n, 1));
+    result.emplace_back(n, 1);
   return result;
 }
 

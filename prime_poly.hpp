@@ -1,14 +1,17 @@
 
 #pragma once
 
+#pragma once
+
 #include "field.hpp"
 #include "gmp.hpp"
 #include "polynomial.hpp"
 
-template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
+template <class BaseField>
+struct PrimePolyField : Field<Polynomial<BaseField>> {
   using value_t = Polynomial<BaseField>;
   using base_element_t = FieldElement<BaseField>;
-  using element_t = FieldElement<ZechPolyField>;
+  using element_t = FieldElement<PrimePolyField>;
 
   const BaseField &base_field;
   const Polynomial<BaseField> &f;
@@ -16,29 +19,27 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   const uint32_t k;
   const integer_t q;
 
-  ZechPolyField(const BaseField &base_field, const Polynomial<BaseField> &f)
+  PrimePolyField(const BaseField &base_field, const Polynomial<BaseField> &f)
       : base_field(base_field), f(f), p(base_field.characteristic()),
         k(base_field.degree() * f.degree()), q(gmp::pow(p, k)) {
     // TODO: Check that f is irreducible
 
-    if (base_field.type() != ZechFieldType)
+    if (base_field.type() != SmallPrimeFieldType)
       throw math_error()
-          << "ZechPolyField expected ZechField as base field, got "
+          << "PrimePolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
   }
 
   integer_t characteristic() const override { return p; }
   uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
-  FieldType type() const override { return ZechPolyFieldType; }
+  FieldType type() const override { return PrimePolyFieldType; }
 
   value_t zero() const override {
-    return value_t(base_field, f.variable,
-                   {base_field.element(base_field.zero())});
+    return value_t(base_field, f.variable, {base_field.element(0)});
   }
   value_t one() const override {
-    return value_t(base_field, f.variable,
-                   {base_field.element(base_field.one())});
+    return value_t(base_field, f.variable, {base_field.element(1)});
   }
   value_t integer(const integer_t number) const override {
     const base_element_t coeff = base_field(number);
@@ -78,8 +79,8 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   }
 
   friend std::ostream &operator<<(std::ostream &os,
-                                  const ZechPolyField &field) {
-    return os << "ZechPolyField over [" << field.base_field << "] defined by "
+                                  const PrimePolyField &field) {
+    return os << "PrimePolyField over [" << field.base_field << "] defined by "
               << field.f;
   }
 };
