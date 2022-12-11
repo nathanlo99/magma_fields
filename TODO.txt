@@ -1,8 +1,9 @@
 x Write a function to check whether a given polynomial over GF(p) is irreducible 
   x Rabin's algorithm seems simpler than Berlekamp's as it avoids matrix 
     row-reduction
-- Write sample() functions to randomly sample from fields
-- Write a function to find a random irreducible polynomial and to construct 
+x Write sample() functions to randomly sample from fields
+x Write a function to find a random irreducible polynomial and to construct 
     arbitrary quotients for ZechField
+- Move shared field stuff to AbstractField
 - Design embedding layout
   - ... TODO(more)
