@@ -38,12 +38,14 @@ struct Lattice {
   // 4. If p < 2^16                          -> PrimePolyField
   // 5. Finally                              -> GeneralPolyField
   std::shared_ptr<AbstractField> add_field(const uint64_t k) {
-    // TODO: Construct and add a field with degree k
     std::cout << "add_field called on lattice with characteristic " << p
               << " and degree " << k << std::endl;
 
     // 1. Prime fields
     if (k == 1) {
+      // If we already have a prime field, just return that
+      if (fields.size() > 0)
+        return fields[0];
       if (p < (1_mpz << 16))
         fields.push_back(std::make_shared<SmallPrimeField>(p));
       else if (p < (1_mpz << 32))
@@ -63,30 +65,33 @@ struct Lattice {
       switch (prime_field->type()) {
       case SmallPrimeFieldType: {
         const SmallPrimeField &P =
-            *dynamic_cast<SmallPrimeField *>(prime_field);
+            dynamic_cast<SmallPrimeField &>(*prime_field);
         fields.push_back(
             std::make_shared<ZechField<SmallPrimeField>>(P, 'z', k));
-      } break;
+        return fields.back();
+      }
 
       case MediumPrimeFieldType: {
         const MediumPrimeField &P =
-            *dynamic_cast<MediumPrimeField *>(prime_field);
+            dynamic_cast<MediumPrimeField &>(*prime_field);
         fields.push_back(
             std::make_shared<ZechField<MediumPrimeField>>(P, 'z', k));
-      } break;
+        return fields.back();
+      }
 
       case LargePrimeFieldType: {
         const LargePrimeField &P =
-            *dynamic_cast<LargePrimeField *>(prime_field);
+            dynamic_cast<LargePrimeField &>(*prime_field);
         fields.push_back(
             std::make_shared<ZechField<LargePrimeField>>(P, 'z', k));
-      } break;
+        return fields.back();
+      }
 
       default:
         throw math_error()
             << "Prime field was not actually of prime field type";
       }
-      return fields.back();
+      return nullptr;
     }
 
     // 3. Two-step optimized representation
@@ -103,31 +108,32 @@ struct Lattice {
       switch (prime_field->type()) {
       case SmallPrimeFieldType: {
         const SmallPrimeField &S =
-            *dynamic_cast<SmallPrimeField *>(prime_field);
+            dynamic_cast<SmallPrimeField &>(*prime_field);
         fields.push_back(
             std::make_shared<PrimePolyField<SmallPrimeField>>(S, 'z', k));
-      } break;
+        return fields.back();
+      }
 
       case MediumPrimeFieldType: {
         const MediumPrimeField &S =
-            *dynamic_cast<MediumPrimeField *>(prime_field);
+            dynamic_cast<MediumPrimeField &>(*prime_field);
         fields.push_back(
             std::make_shared<PrimePolyField<MediumPrimeField>>(S, 'z', k));
-      } break;
+        return fields.back();
+      }
 
       case LargePrimeFieldType: {
         const LargePrimeField &S =
-            *dynamic_cast<LargePrimeField *>(prime_field);
+            dynamic_cast<LargePrimeField &>(*prime_field);
         fields.push_back(
             std::make_shared<PrimePolyField<LargePrimeField>>(S, 'z', k));
-      } break;
+        return fields.back();
+      }
 
       default:
         throw math_error()
             << "Prime field was not actually of prime field type";
       }
-      return fields.back();
-
     } else {
       // Otherwise, create a two-step optimized representation
       const auto S_tmp = add_field(best_ell);
@@ -136,41 +142,48 @@ struct Lattice {
       switch (prime_field->type()) {
       case SmallPrimeFieldType: {
         const ZechField<SmallPrimeField> &S =
-            *dynamic_cast<ZechField<SmallPrimeField> *>(prime_field);
+            dynamic_cast<ZechField<SmallPrimeField> &>(*S_tmp);
         fields.push_back(
             std::make_shared<ZechPolyField<ZechField<SmallPrimeField>>>(
                 S, 'z', k / best_ell));
-      } break;
+        return fields.back();
+      }
 
       case MediumPrimeFieldType: {
         const ZechField<MediumPrimeField> &S =
-            *dynamic_cast<ZechField<MediumPrimeField> *>(prime_field);
+            dynamic_cast<ZechField<MediumPrimeField> &>(*S_tmp);
         fields.push_back(
             std::make_shared<ZechPolyField<ZechField<MediumPrimeField>>>(
                 S, 'z', k / best_ell));
-      } break;
+        return fields.back();
+      }
 
       case LargePrimeFieldType: {
         const ZechField<LargePrimeField> &S =
-            *dynamic_cast<ZechField<LargePrimeField> *>(prime_field);
+            dynamic_cast<ZechField<LargePrimeField> &>(*S_tmp);
         fields.push_back(
             std::make_shared<ZechPolyField<ZechField<LargePrimeField>>>(
                 S, 'z', k / best_ell));
-      } break;
+        return fields.back();
+      }
 
       default:
         throw math_error()
             << "Prime field was not actually of prime field type";
       }
     }
-    return nullptr;
+
+    throw math_error()
+        << "Unimplemented code path: could not add field with cardinality " << p
+        << "^" << k;
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Lattice &lattice) {
-    // TODO: Move logic unrelated to values to AbstractField so we can print
-    // them
     for (const auto &field : lattice.fields) {
-      std::cout << " - Field with unknown properties at " << field << std::endl;
+      std::cout << " - " << field << ": " << field_type_to_string(field->type())
+                << " of cardinality " << field->characteristic() << "^"
+                << field->degree() << " = " << field->cardinality()
+                << std::endl;
     }
     return os;
   }

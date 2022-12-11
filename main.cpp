@@ -95,7 +95,9 @@ int main(int argc, char *argv[]) {
 
   timeit("Debug demo", []() {
     LatticeManager manager;
-    const auto F = manager.FiniteField(3, 4);
+    manager.FiniteField(5, 4);
+    manager.FiniteField(3, 24);
+    manager.FiniteField(2, 103);
     std::cout << manager << std::endl;
   });
 

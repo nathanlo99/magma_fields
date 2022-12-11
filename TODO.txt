@@ -4,6 +4,6 @@ x Write a function to check whether a given polynomial over GF(p) is irreducible
 x Write sample() functions to randomly sample from fields
 x Write a function to find a random irreducible polynomial and to construct 
     arbitrary quotients for ZechField
-- Move shared field stuff to AbstractField
+x Move shared field stuff to AbstractField
 - Design embedding layout
   - ... TODO(more)

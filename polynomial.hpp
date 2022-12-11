@@ -254,7 +254,8 @@ public:
   friend Polynomial pow_mod(const Polynomial &f, integer_t exp,
                             const Polynomial &mod) {
     Polynomial result = f.one_poly(), base = f;
-    // TODO: Mod out by the order q^n - 1
+    // NOTE: We don't want to mod out by the order q^n - 1 before confirming
+    //       that f is irreducible, so defer this
     while (exp != 0) {
       if (exp % 2 == 1)
         result = (result * base) % mod;

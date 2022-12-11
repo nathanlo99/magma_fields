@@ -5,6 +5,7 @@
 
 #include "field.hpp"
 #include "gmp.hpp"
+#include "logger.hpp"
 #include "polynomial.hpp"
 
 template <class BaseField>
@@ -43,6 +44,9 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
     do {
       f = Polynomial<BaseField>::sample(base_field, variable, k).monic();
     } while (f.coeffs[k] == f.zero || !f.is_irreducible_rabin());
+    log() << "Constructed PrimePolyField over " << base_field << " with degree "
+          << k << std::endl;
+    log() << "Found the irreducible polynomial " << f << std::endl;
   }
 
   integer_t characteristic() const override { return p; }

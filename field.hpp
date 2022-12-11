@@ -31,37 +31,36 @@ enum FieldType {
 inline std::string field_type_to_string(const FieldType &type) {
   switch (type) {
   case SmallPrimeFieldType:
-    return "SmallPrimeFieldType";
+    return "SmallPrimeField";
   case MediumPrimeFieldType:
-    return "MediumPrimeFieldType";
+    return "MediumPrimeField";
   case LargePrimeFieldType:
-    return "LargePrimeFieldType";
+    return "LargePrimeField";
   case ZechFieldType:
-    return "ZechFieldType";
+    return "ZechField";
   case ZechPolyFieldType:
-    return "ZechPolyFieldType";
+    return "ZechPolyField";
   case PrimePolyFieldType:
-    return "PrimePolyFieldType";
+    return "PrimePolyField";
   case GeneralPolyFieldType:
-    return "GeneralPolyFieldType";
+    return "GeneralPolyField";
   default:
-    return "OtherType";
+    return "Other";
   }
 }
 
 struct AbstractField {
+  // Field properties
   virtual FieldType type() const = 0;
+  virtual integer_t characteristic() const = 0;
+  virtual uint32_t degree() const = 0;
+  virtual integer_t cardinality() const = 0;
 };
 
 template <class Value> struct Field : Indexed<Field<Value>>, AbstractField {
   using value_t = Value;
 
   virtual ~Field() {}
-
-  // Field properties
-  virtual integer_t characteristic() const = 0;
-  virtual uint32_t degree() const = 0;
-  virtual integer_t cardinality() const = 0;
 
   // Element constructors
   virtual value_t zero() const = 0;
