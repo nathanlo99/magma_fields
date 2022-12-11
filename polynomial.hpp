@@ -14,28 +14,44 @@ template <class Field = integer_t> struct Polynomial {
   char variable;
   const element_t zero, one;
   std::vector<element_t> coeffs;
+  std::vector<size_t> support; // k such that coeffs[k] != zero
 
+  // Support provided
   Polynomial(const Field &field, const char variable,
-             const std::vector<element_t> &coeffs = {})
+             const std::vector<element_t> &coeffs,
+             const std::vector<size_t> &support)
       : field(field), variable(variable), zero(field.element(field.zero())),
-        one(field.element(field.one())), coeffs(coeffs) {
-    if (coeffs.empty()) {
-      this->coeffs = {zero, one};
-      return;
-    }
-
+        one(field.element(field.one())), coeffs(coeffs), support(support) {
     // Remove leading zeroes
     while (this->coeffs.size() > 1 && this->coeffs.back() == zero)
       this->coeffs.pop_back();
   }
 
+  // No support provided
+  Polynomial(const Field &field, const char variable,
+             const std::vector<element_t> &coeffs)
+      : field(field), variable(variable), zero(field.element(field.zero())),
+        one(field.element(field.one())), coeffs(coeffs) {
+    // Remove leading zeroes
+    while (this->coeffs.size() > 1 && this->coeffs.back() == zero)
+      this->coeffs.pop_back();
+
+    // Compute support
+    for (size_t i = 0; i < this->coeffs.size(); ++i) {
+      if (this->coeffs[i] != zero)
+        this->support.push_back(i);
+    }
+  }
+
 public:
   Polynomial(const Field &field, const char variable,
-             const std::vector<integer_t> &coeffs)
+             const std::vector<integer_t> &coeffs = {})
       : field(field), variable(variable), zero(field.element(field.zero())),
-        one(field.element(field.one())), coeffs(coeffs.size(), zero) {
+        one(field.element(field.one())), coeffs(coeffs.size(), zero),
+        support() {
     if (coeffs.empty()) {
       this->coeffs = {zero, one};
+      support = {0, 1};
       return;
     }
 
@@ -45,12 +61,22 @@ public:
     // Remove leading zeroes
     while (this->coeffs.size() > 1 && this->coeffs.back() == zero)
       this->coeffs.pop_back();
+
+    // Compute support
+    for (size_t i = 0; i < this->coeffs.size(); ++i) {
+      if (this->coeffs[i] != zero)
+        support.push_back(i);
+    }
   }
 
   Polynomial(const Polynomial &other)
-      : field(other.field), variable(other.variable),
-        zero(field.element(field.zero())), one(field.element(field.one())),
-        coeffs(other.coeffs) {}
+      : field(other.field), variable(other.variable), zero(other.zero),
+        one(other.one), coeffs(other.coeffs), support(other.support) {}
+
+  Polynomial(Polynomial &&other)
+      : field(other.field), variable(other.variable), zero(other.zero),
+        one(other.one), coeffs(std::move(other.coeffs)),
+        support(std::move(other.support)) {}
 
   Polynomial &operator=(const Polynomial &other) {
     if (field != other.field)
@@ -60,6 +86,19 @@ public:
       throw math_error(
           "Cannot assign Polynomial to Polynomial with different variable");
     coeffs = other.coeffs;
+    support = other.support;
+    return *this;
+  }
+
+  Polynomial &operator=(Polynomial &&other) {
+    if (field != other.field)
+      throw math_error(
+          "Cannot assign Polynomial to Polynomial with different field");
+    if (variable != other.variable)
+      throw math_error(
+          "Cannot assign Polynomial to Polynomial with different variable");
+    std::swap(coeffs, other.coeffs);
+    std::swap(support, other.support);
     return *this;
   }
 
@@ -67,15 +106,24 @@ public:
   inline element_t operator[](const size_t idx) const {
     return idx < coeffs.size() ? coeffs[idx] : zero;
   }
+  inline Polynomial zero_poly() const {
+    return Polynomial(field, variable, {zero}, {});
+  }
+  inline Polynomial one_poly() const {
+    return Polynomial(field, variable, {one}, {0});
+  }
+
+  inline Polynomial monic() const {
+    return *this == zero_poly() ? *this : (*this / coeffs.back());
+  }
 
   Polynomial operator-() const {
     const size_t degree_plus_one = coeffs.size();
     std::vector<element_t> result_coeffs(degree_plus_one, zero);
     // TOOD: Parallelize this
-    for (size_t i = 0; i < degree_plus_one; ++i) {
+    for (size_t i : support)
       result_coeffs[i] = -coeffs[i];
-    }
-    return Polynomial(field, variable, result_coeffs);
+    return Polynomial(field, variable, result_coeffs, support);
   }
 
   friend Polynomial operator+(const Polynomial &a, const Polynomial &b) {
@@ -113,14 +161,31 @@ public:
   friend Polynomial operator-(const Polynomial &a, const Polynomial &b) {
     return a + (-b);
   }
+  friend Polynomial operator-(const Polynomial &p, const element_t k) {
+    std::vector<element_t> result_coeffs = p.coeffs;
+    result_coeffs[0] -= k;
+    return Polynomial(p.field, p.variable, result_coeffs);
+  }
+  friend Polynomial operator-(const element_t k, const Polynomial &p) {
+    return -(p - k);
+  }
+  friend Polynomial operator-(const Polynomial &p, const integer_t k) {
+    return p - p.field(k);
+  }
+  friend Polynomial operator-(const integer_t k, const Polynomial &p) {
+    return -(p - k);
+  }
 
   friend Polynomial operator*(const element_t k, const Polynomial &p) {
+    if (k == p.zero)
+      return p.zero_poly();
+    // k is non-zero, so it doesn't change the support
     const size_t degree_plus_one = p.coeffs.size();
     std::vector<element_t> result_coeffs(degree_plus_one, p.zero);
     // TODO: Parallelize this
-    for (size_t i = 0; i < degree_plus_one; ++i)
+    for (const size_t i : p.support)
       result_coeffs[i] = k * p.coeffs[i];
-    return Polynomial(p.field, p.variable, result_coeffs);
+    return Polynomial(p.field, p.variable, result_coeffs, p.support);
   }
   friend Polynomial operator*(const Polynomial &p, const element_t k) {
     return k * p;
@@ -147,19 +212,28 @@ public:
     const size_t b_degree = b.coeffs.size() - 1;
     const size_t result_degree = a_degree + b_degree;
     std::vector<element_t> result_coeffs(result_degree + 1, a.zero);
-    for (size_t i = 0; i <= a_degree; ++i) {
-      for (size_t j = 0; j <= b_degree; ++j) {
+    for (const size_t i : a.support)
+      for (const size_t j : b.support)
         result_coeffs[i + j] += a[i] * b[j];
-      }
-    }
     return Polynomial(a.field, a.variable, result_coeffs);
   }
   Polynomial &operator*=(const Polynomial &other) {
     return *this = *this * other;
   }
 
+  friend Polynomial operator/(const Polynomial &p, const element_t k) {
+    return p * k.inv();
+  }
+
   Polynomial operator^(uint64_t exp) const {
-    Polynomial result(field, variable, {one}), pow = *this;
+    const Polynomial x = Polynomial(field, variable);
+    if (*this == x) {
+      std::vector<element_t> result_coeffs(exp + 1, zero);
+      result_coeffs[exp] = one;
+      return Polynomial(field, variable, result_coeffs, {exp});
+    }
+
+    Polynomial result(field, variable, {one}, {0}), pow = *this;
     while (exp > 0) {
       if (exp % 2 == 1)
         result *= pow;
@@ -171,7 +245,7 @@ public:
 
   friend Polynomial pow_mod(const Polynomial &f, uint64_t exp,
                             const Polynomial &mod) {
-    Polynomial result = Polynomial(f.field, 'x', {f.one}), base = f;
+    Polynomial result = f.one_poly(), base = f;
     // TODO: Mod out by the order q^n - 1
     while (exp != 0) {
       if (exp % 2 == 1)
@@ -183,8 +257,15 @@ public:
   }
 
   friend Polynomial inv_mod(const Polynomial &f, const Polynomial &mod) {
-    const Polynomial zero = Polynomial(f.field, f.variable, {f.zero}),
-                     one = Polynomial(f.field, f.variable, {f.one});
+    if (f.field != mod.field)
+      throw math_error() << "Cannot compute modular inverses for polynomials "
+                            "over different fields";
+    if (f.variable != mod.variable)
+      throw math_error() << "Cannot compute modular inverses with polynomials "
+                            "with two different variables '"
+                         << f.variable << "' and '" << mod.variable << "'";
+
+    const Polynomial zero = f.zero_poly(), one = f.one_poly();
     Polynomial r0 = mod, r1 = f, s0 = one, s1 = zero, t0 = zero, t1 = one;
     while (r1 != zero) {
       const auto &[q, r2] = divmod(r0, r1);
@@ -192,6 +273,28 @@ public:
           std::make_tuple(r1, s1, t1, r2, s0 - s1 * q, t0 - t1 * q);
     }
     return (t0 + mod) % mod;
+  }
+
+  friend Polynomial polynomial_gcd(const Polynomial &f, const Polynomial &g) {
+    if (f.field != g.field)
+      throw math_error()
+          << "Cannot compute gcd of polynomials over different fields";
+    if (f.variable != g.variable)
+      throw math_error()
+          << "Cannot compute gcd of polynomials with two different variables '"
+          << f.variable << "' and '" << g.variable << "'";
+
+    Polynomial a = f, b = g;
+    const Polynomial zero_poly(f.field, f.variable,
+                               {f.field.element(f.field.zero())});
+    while (true) {
+      if (b == zero_poly)
+        return a.monic();
+      a = a % b;
+      if (a == zero_poly)
+        return b.monic();
+      b = b % a;
+    }
   }
 
   friend std::pair<Polynomial, Polynomial> divmod(const Polynomial &p,
@@ -215,10 +318,11 @@ public:
     std::vector<element_t> result_coeffs(result_degree + 1, p.zero);
     std::vector<element_t> p_coeffs = p.coeffs;
     for (int d = result_degree; d >= 0; --d) {
+      if (p_coeffs[q_degree + d] == p.zero)
+        continue;
       const element_t pivot = p_coeffs[q_degree + d] * inv_q_leading_coeff;
       result_coeffs[d] = pivot;
-      p_coeffs[q_degree + d] = p.zero;
-      for (size_t i = 0; i < q_degree; ++i)
+      for (const size_t i : q.support)
         p_coeffs[i + d] -= pivot * q.coeffs[i];
     }
     return std::make_pair(Polynomial(p.field, p.variable, result_coeffs),
@@ -233,7 +337,8 @@ public:
   }
 
   friend constexpr bool operator==(const Polynomial &a, const Polynomial &b) {
-    return a.variable == b.variable && a.coeffs == b.coeffs;
+    return a.variable == b.variable && a.support == b.support &&
+           a.coeffs == b.coeffs;
   }
 
   std::string to_string() const {
@@ -243,17 +348,14 @@ public:
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Polynomial &p) {
-    if (p.coeffs.size() == 1 && p[0] == p.zero)
+    if (p.coeffs == std::vector<element_t>({p.zero}))
       return os << "0";
     bool first = true;
-    for (int d = static_cast<int>(p.coeffs.size()) - 1; d >= 0; --d) {
-      if (p[d] == p.zero)
-        continue;
-      if (first) {
-        first = false;
-      } else {
+    for (auto d_it = p.support.rbegin(); d_it != p.support.rend(); ++d_it) {
+      const size_t d = *d_it;
+      if (!first)
         os << " + ";
-      }
+      first = false;
 
       const element_t coeff = p.coeffs[d];
       if (d != 0) {

@@ -89,8 +89,20 @@ int main(int argc, char *argv[]) {
               << std::endl;
   });
 
-  timeit("Debug demo", []() {
-    LatticeManager manager;
-    const auto F = manager.FiniteField(3, 4);
+  // timeit("Debug demo", []() {
+  //   LatticeManager manager;
+  //   const auto F = manager.FiniteField(3, 4);
+  // });
+
+  timeit("Polynomial gcd's", []() {
+    const auto F = SmallPrimeField(127);
+    const auto x = Polynomial(F, 'x');
+    const auto f = (x ^ 2) + 7 * x + 6;
+    std::cout << f << std::endl;
+    const auto g = (x ^ 2) - 5 * x - 6;
+    std::cout << g << std::endl;
+    const auto gcd = polynomial_gcd(f, g);
+    std::cout << "The gcd of " << f << " and " << g << " is " << gcd
+              << std::endl;
   });
 }
