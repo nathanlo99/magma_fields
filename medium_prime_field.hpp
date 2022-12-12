@@ -85,12 +85,18 @@ struct MediumPrimeField : Field<uint32_t> {
 
   bool eq(const value_t a, const value_t b) const override { return a == b; }
 
-  std::string to_string(const value_t a) const override {
+  std::string value_to_string(const value_t a) const override {
     return std::to_string(a);
   }
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const MediumPrimeField &field) {
-    return os << "Finite field of order " << field.p;
+    return os << "MediumPrimeField: Prime field with order " << field.p;
+  }
+
+  std::string to_string() const override {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
   }
 };

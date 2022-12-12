@@ -55,6 +55,7 @@ struct AbstractField {
   virtual integer_t characteristic() const = 0;
   virtual uint32_t degree() const = 0;
   virtual integer_t cardinality() const = 0;
+  virtual std::string to_string() const = 0;
 };
 
 template <class Value> struct Field : Indexed<Field<Value>>, AbstractField {
@@ -150,7 +151,7 @@ template <class Value> struct Field : Indexed<Field<Value>>, AbstractField {
     return exp;
   }
 
-  virtual std::string to_string(const value_t a) const = 0;
+  virtual std::string value_to_string(const value_t a) const = 0;
 };
 
 template <typename Field> struct FieldElement {
@@ -229,6 +230,6 @@ template <typename Field> struct FieldElement {
   }
 
   friend std::ostream &operator<<(std::ostream &os, const FieldElement &val) {
-    return os << val.field.to_string(val.value);
+    return os << val.field.value_to_string(val.value);
   }
 };

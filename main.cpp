@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
   timeit("Field of cardinality 3^3", []() {
     const auto F3 = SmallPrimeField(3);
-    const auto f = Polynomial(F3, 'x', {1, 2, 0, 1});
+    const auto f = Polynomial(F3, "x", {1, 2, 0, 1});
     const auto Z = ZechField(F3, f);
     std::cout << "Z = " << Z << std::endl;
     const auto x = Z.primitive_element();
@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
 
   timeit("Field of cardinality 2^5", []() {
     const auto F2 = SmallPrimeField(2);
-    const auto x = Polynomial(F2, 'x');
+    const auto x = Polynomial(F2, "x");
     const auto f = (x ^ 5) + (x ^ 2) + 1;
     const auto GF = PrimePolyField(F2, f);
     std::cout << "GF = " << GF << std::endl;
@@ -71,12 +71,12 @@ int main(int argc, char *argv[]) {
   // Untested
   timeit("Field of cardinality 2^32", []() {
     const auto F2 = SmallPrimeField(2);
-    const auto x = Polynomial(F2, 'x');
+    const auto x = Polynomial(F2, "x");
     const auto f = (x ^ 16) + (x ^ 12) + (x ^ 3) + x + 1;
     const auto F2_16 = ZechField(F2, f);
     std::cout << F2_16 << " has cardinality " << F2_16.cardinality()
               << std::endl;
-    const auto z = Polynomial(F2_16, 'z');
+    const auto z = Polynomial(F2_16, "z");
     const auto g = (z ^ 2) + F2_16.primitive_element() * z + 1;
     const auto F2_32 = ZechPolyField(F2_16, g);
     std::cout << F2_32 << " has cardinality " << F2_32.cardinality()
@@ -95,15 +95,17 @@ int main(int argc, char *argv[]) {
 
   timeit("Debug demo", []() {
     LatticeManager manager;
-    manager.FiniteField(5, 4);
-    manager.FiniteField(3, 24);
-    manager.FiniteField(2, 103);
+    manager.FiniteField(5, 4);   // Zech
+    manager.FiniteField(3, 24);  // Two-step: ZechPoly over a Zech
+    manager.FiniteField(2, 8);   // ZechField
+    manager.FiniteField(2, 103); // PrimePolyField
+    manager.FiniteField(2, 120); // ZechPoly over a ZechField of degree 20
     std::cout << manager << std::endl;
   });
 
   // timeit("Polynomial gcd's", []() {
   //   const auto F = SmallPrimeField(127);
-  //   const auto x = Polynomial(F, 'x');
+  //   const auto x = Polynomial(F, "x");
   //   const auto f = (x ^ 2) + 7 * x + 6;
   //   std::cout << f << std::endl;
   //   const auto g = (x ^ 2) - 5 * x - 6;
@@ -119,7 +121,7 @@ int main(int argc, char *argv[]) {
   //   for (uint64_t degree = 1; degree <= 11; ++degree) {
   //     std::cout << "For degree " << degree << "... " << std::flush;
   //     uint64_t least_support = degree + 2;
-  //     Polynomial best_polynomial = Polynomial(F, 'x');
+  //     Polynomial best_polynomial = Polynomial(F, "x");
   //     uint64_t num_irreducible = 0;
   //     for (integer_t iter = 0; iter < gmp::pow(p, degree + 1); ++iter) {
   //       std::vector<integer_t> coeffs(degree + 1);
@@ -130,7 +132,7 @@ int main(int argc, char *argv[]) {
   //       }
   //       if (coeffs[degree] == 0 || coeffs[0] == 0)
   //         continue;
-  //       const Polynomial f = Polynomial(F, 'x', coeffs);
+  //       const Polynomial f = Polynomial(F, "x", coeffs);
   //       if (!f.is_irreducible_rabin())
   //         continue;
   //       num_irreducible++;
@@ -148,7 +150,7 @@ int main(int argc, char *argv[]) {
   // timeit("Generating random polynomials", []() {
   //   const auto F = SmallPrimeField(5);
   //   for (int i = 0; i < 10; ++i) {
-  //     const Polynomial p = Polynomial<decltype(F)>::sample(F, 'x', 4);
+  //     const Polynomial p = random_polynomial<false>(F, "x", 4);
   //     std::cout << p << std::endl;
   //   }
   // });

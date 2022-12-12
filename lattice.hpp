@@ -67,7 +67,7 @@ struct Lattice {
         const SmallPrimeField &P =
             dynamic_cast<SmallPrimeField &>(*prime_field);
         fields.push_back(
-            std::make_shared<ZechField<SmallPrimeField>>(P, 'z', k));
+            std::make_shared<ZechField<SmallPrimeField>>(P, "z", k));
         return fields.back();
       }
 
@@ -75,7 +75,7 @@ struct Lattice {
         const MediumPrimeField &P =
             dynamic_cast<MediumPrimeField &>(*prime_field);
         fields.push_back(
-            std::make_shared<ZechField<MediumPrimeField>>(P, 'z', k));
+            std::make_shared<ZechField<MediumPrimeField>>(P, "z", k));
         return fields.back();
       }
 
@@ -83,7 +83,7 @@ struct Lattice {
         const LargePrimeField &P =
             dynamic_cast<LargePrimeField &>(*prime_field);
         fields.push_back(
-            std::make_shared<ZechField<LargePrimeField>>(P, 'z', k));
+            std::make_shared<ZechField<LargePrimeField>>(P, "z", k));
         return fields.back();
       }
 
@@ -110,7 +110,7 @@ struct Lattice {
         const SmallPrimeField &S =
             dynamic_cast<SmallPrimeField &>(*prime_field);
         fields.push_back(
-            std::make_shared<PrimePolyField<SmallPrimeField>>(S, 'z', k));
+            std::make_shared<PrimePolyField<SmallPrimeField>>(S, "z", k));
         return fields.back();
       }
 
@@ -118,7 +118,7 @@ struct Lattice {
         const MediumPrimeField &S =
             dynamic_cast<MediumPrimeField &>(*prime_field);
         fields.push_back(
-            std::make_shared<PrimePolyField<MediumPrimeField>>(S, 'z', k));
+            std::make_shared<PrimePolyField<MediumPrimeField>>(S, "z", k));
         return fields.back();
       }
 
@@ -126,7 +126,7 @@ struct Lattice {
         const LargePrimeField &S =
             dynamic_cast<LargePrimeField &>(*prime_field);
         fields.push_back(
-            std::make_shared<PrimePolyField<LargePrimeField>>(S, 'z', k));
+            std::make_shared<PrimePolyField<LargePrimeField>>(S, "z", k));
         return fields.back();
       }
 
@@ -145,7 +145,7 @@ struct Lattice {
             dynamic_cast<ZechField<SmallPrimeField> &>(*S_tmp);
         fields.push_back(
             std::make_shared<ZechPolyField<ZechField<SmallPrimeField>>>(
-                S, 'z', k / best_ell));
+                S, "z", k / best_ell));
         return fields.back();
       }
 
@@ -154,7 +154,7 @@ struct Lattice {
             dynamic_cast<ZechField<MediumPrimeField> &>(*S_tmp);
         fields.push_back(
             std::make_shared<ZechPolyField<ZechField<MediumPrimeField>>>(
-                S, 'z', k / best_ell));
+                S, "z", k / best_ell));
         return fields.back();
       }
 
@@ -163,7 +163,7 @@ struct Lattice {
             dynamic_cast<ZechField<LargePrimeField> &>(*S_tmp);
         fields.push_back(
             std::make_shared<ZechPolyField<ZechField<LargePrimeField>>>(
-                S, 'z', k / best_ell));
+                S, "z", k / best_ell));
         return fields.back();
       }
 
@@ -180,10 +180,7 @@ struct Lattice {
 
   friend std::ostream &operator<<(std::ostream &os, const Lattice &lattice) {
     for (const auto &field : lattice.fields) {
-      std::cout << " - " << field << ": " << field_type_to_string(field->type())
-                << " of cardinality " << field->characteristic() << "^"
-                << field->degree() << " = " << field->cardinality()
-                << std::endl;
+      std::cout << " - " << field << ": " << field->to_string() << std::endl;
     }
     return os;
   }

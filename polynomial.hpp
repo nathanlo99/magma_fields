@@ -12,13 +12,13 @@ template <class Field> struct Polynomial {
   using element_t = typename Field::element_t;
 
   const Field &field;
-  char variable;
+  const std::string variable;
   const element_t zero, one;
   std::vector<element_t> coeffs;
   std::vector<size_t> support; // k such that coeffs[k] != zero
 
   // Support provided
-  Polynomial(const Field &field, const char variable,
+  Polynomial(const Field &field, const std::string &variable,
              const std::vector<element_t> &coeffs,
              const std::vector<size_t> &support)
       : field(field), variable(variable), zero(field.element(field.zero())),
@@ -29,7 +29,7 @@ template <class Field> struct Polynomial {
   }
 
   // No support provided
-  Polynomial(const Field &field, const char variable,
+  Polynomial(const Field &field, const std::string &variable,
              const std::vector<element_t> &coeffs)
       : field(field), variable(variable), zero(field.element(field.zero())),
         one(field.element(field.one())), coeffs(coeffs) {
@@ -45,7 +45,7 @@ template <class Field> struct Polynomial {
   }
 
 public:
-  Polynomial(const Field &field, const char variable,
+  Polynomial(const Field &field, const std::string &variable,
              const std::vector<integer_t> &coeffs = {})
       : field(field), variable(variable), zero(field.element(field.zero())),
         one(field.element(field.one())), coeffs(coeffs.size(), zero),
@@ -112,13 +112,6 @@ public:
   }
   inline Polynomial one_poly() const {
     return Polynomial(field, variable, {one}, {0});
-  }
-  static inline Polynomial sample(const Field &field, const char variable,
-                                  const uint64_t degree) {
-    std::vector<element_t> coeffs(degree + 1, field.element(field.zero()));
-    for (size_t i = 0; i <= degree; ++i)
-      coeffs[i] = field.random_element();
-    return Polynomial(field, variable, coeffs);
   }
 
   inline Polynomial monic() const {
@@ -345,12 +338,17 @@ public:
       first = false;
 
       const element_t coeff = p.coeffs[d];
+      const std::string coeff_str = p.field.value_to_string(coeff.value);
+      const std::string display_str = coeff_str.find('+') == std::string::npos
+                                          ? coeff_str
+                                          : "(" + coeff_str + ")";
+
       if (d != 0) {
         if (coeff != p.one)
-          os << coeff;
+          os << display_str;
         os << p.variable;
       } else {
-        os << coeff;
+        os << display_str;
       }
       if (d > 1)
         os << "^" << d;
@@ -422,3 +420,18 @@ public:
     return true;
   }
 };
+
+template <bool exact_degree, class Field>
+static inline Polynomial<Field> random_polynomial(const Field &field,
+                                                  const std::string &variable,
+                                                  const uint64_t degree) {
+  std::vector<typename Field::element_t> coeffs(degree + 1,
+                                                field.element(field.zero()));
+  for (size_t i = 0; i <= degree; ++i)
+    coeffs[i] = field.random_element();
+  if constexpr (exact_degree) {
+    while (coeffs[degree] == field.element(field.zero()))
+      coeffs[degree] = field.random_element();
+  }
+  return Polynomial(field, variable, coeffs);
+}

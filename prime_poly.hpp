@@ -32,7 +32,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
           << "PrimePolyField expected irreducible polynomial, got " << f;
   }
 
-  PrimePolyField(const BaseField &base_field, const char variable,
+  PrimePolyField(const BaseField &base_field, const std::string &variable,
                  const uint64_t k)
       : base_field(base_field), f(base_field, variable),
         p(base_field.characteristic()), k(base_field.degree() * k),
@@ -42,8 +42,8 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
           << "PrimePolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
     do {
-      f = Polynomial<BaseField>::sample(base_field, variable, k).monic();
-    } while (f.coeffs[k] == f.zero || !f.is_irreducible_rabin());
+      f = random_polynomial<true>(base_field, variable, k).monic();
+    } while (!f.is_irreducible_rabin());
     log() << "Constructed PrimePolyField over " << base_field << " with degree "
           << k << std::endl;
     log() << "Found the irreducible polynomial " << f << std::endl;
@@ -75,7 +75,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   }
   element_t random_element() const {
     const auto random_poly =
-        Polynomial<BaseField>::sample(base_field, f.variable, k);
+        random_polynomial<false>(base_field, f.variable, k);
     return element_t(*this, random_poly);
   }
 
@@ -98,13 +98,19 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
 
   bool eq(const value_t a, const value_t b) const override { return a == b; }
 
-  std::string to_string(const value_t a) const override {
+  std::string value_to_string(const value_t a) const override {
     return a.to_string();
   }
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const PrimePolyField &field) {
-    return os << "PrimePolyField over [" << field.base_field << "] defined by "
-              << field.f;
+    return os << "PrimePolyField: degree " << field.f.degree()
+              << " extension with defining polynomial '" << field.f << "'";
+  }
+
+  std::string to_string() const override {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
   }
 };

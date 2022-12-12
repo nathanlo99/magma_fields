@@ -89,10 +89,18 @@ struct LargePrimeField : Field<integer_t> {
 
   bool eq(const value_t a, const value_t b) const override { return a == b; }
 
-  std::string to_string(const value_t a) const override { return a.get_str(); }
-
   friend std::ostream &operator<<(std::ostream &os,
                                   const LargePrimeField &field) {
-    return os << "Finite field of order " << field.p;
+    return os << "LargePrimeField: Prime field with order " << field.p;
+  }
+
+  std::string value_to_string(const value_t value) const override {
+    return value.get_str();
+  }
+
+  std::string to_string() const override {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
   }
 };

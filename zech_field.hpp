@@ -86,7 +86,8 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
     zech_table = compute_zech_table(this->p, k, q, f, g);
   }
 
-  ZechField(const BaseField &base_field, const char variable, const uint64_t k)
+  ZechField(const BaseField &base_field, const std::string &variable,
+            const uint64_t k)
       : p(gmp::to_uint(base_field.characteristic())), k(k),
         q(gmp::to_uint(gmp::pow(gmp::from_uint(p), k))), base_field(base_field),
         f(base_field, variable), g(base_field, variable) {
@@ -100,17 +101,18 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
       throw math_error() << "Zech field expected cardinality at most 2^20, got "
                          << p << "^" << k << " = " << q;
 
-    log() << "Creating a ZechField over base_field " << base_field << std::endl;
+    log() << "Creating a ZechField extension of degree " << k
+          << " over base_field " << base_field << std::endl;
     // 1. Generate a irreducible polynomial f of degree k
     do {
-      f = Polynomial<BaseField>::sample(base_field, variable, k).monic();
-    } while (f.degree() != k || !f.is_irreducible_rabin());
-    log() << "Found the irreducible polynomial '" << f << "' of degree " << k
+      f = random_polynomial<true>(base_field, variable, k).monic();
+    } while (!f.is_irreducible_rabin());
+    log() << "Found an irreducible polynomial of degree " << k << ": '" << f
           << std::endl;
 
     // 2. Generate a polynomial g with full order in Z_q[x]/<f>
     do {
-      g = Polynomial<BaseField>::sample(base_field, variable, k).monic();
+      g = random_polynomial<false>(base_field, variable, k).monic();
     } while (!g.is_primitive_mod(f));
     log() << "Found the primitive polynomial '" << g << "'" << std::endl;
 
@@ -200,7 +202,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
     return a == b;
   }
 
-  std::string to_string(const value_t a) const override {
+  std::string value_to_string(const value_t a) const override {
     if (a == q - 1)
       return "0";
     const Polynomial<BaseField> actual = pow_mod(g, a, f);
@@ -208,7 +210,13 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   }
 
   friend std::ostream &operator<<(std::ostream &os, const ZechField &field) {
-    return os << "ZechField over [" << field.base_field
-              << "] with generating polynomial " << field.f;
+    return os << "ZechField: degree " << field.f.degree()
+              << " extension with defining polynomial '" << field.f << "'";
+  }
+
+  std::string to_string() const override {
+    std::stringstream ss;
+    ss << *this;
+    return ss.str();
   }
 };
