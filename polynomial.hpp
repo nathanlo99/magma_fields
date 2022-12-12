@@ -24,9 +24,7 @@ template <class Field> struct Polynomial {
              const std::vector<size_t> &support)
       : field(field), variable(variable), zero(field.element(field.zero())),
         one(field.element(field.one())), coeffs(coeffs), support(support) {
-    // Remove leading zeroes
-    while (this->coeffs.size() > 1 && this->coeffs.back() == zero)
-      this->coeffs.pop_back();
+    remove_leading_zeroes();
   }
 
   // No support provided
@@ -34,15 +32,19 @@ template <class Field> struct Polynomial {
              const std::vector<element_t> &coeffs)
       : field(field), variable(variable), zero(field.element(field.zero())),
         one(field.element(field.one())), coeffs(coeffs) {
-    // Remove leading zeroes
-    while (this->coeffs.size() > 1 && this->coeffs.back() == zero)
-      this->coeffs.pop_back();
+    remove_leading_zeroes();
 
     // Compute support
     for (size_t i = 0; i < this->coeffs.size(); ++i) {
       if (this->coeffs[i] != zero)
         this->support.push_back(i);
     }
+  }
+
+  void remove_leading_zeroes() {
+    // Remove leading zeroes
+    while (this->coeffs.size() > 1 && this->coeffs.back() == zero)
+      this->coeffs.pop_back();
   }
 
 public:
@@ -60,9 +62,7 @@ public:
     for (size_t i = 0; i < coeffs.size(); ++i)
       this->coeffs[i] = field(coeffs[i]);
 
-    // Remove leading zeroes
-    while (this->coeffs.size() > 1 && this->coeffs.back() == zero)
-      this->coeffs.pop_back();
+    remove_leading_zeroes();
 
     // Compute support
     for (size_t i = 0; i < this->coeffs.size(); ++i) {
@@ -99,8 +99,8 @@ public:
     if (variable != other.variable)
       throw math_error(
           "Cannot assign Polynomial to Polynomial with different variable");
-    std::swap(coeffs, other.coeffs);
-    std::swap(support, other.support);
+    coeffs = std::move(other.coeffs);
+    support = std::move(other.support);
     return *this;
   }
 
@@ -123,7 +123,7 @@ public:
     const size_t degree_plus_one = coeffs.size();
     std::vector<element_t> result_coeffs(degree_plus_one, zero);
     // TOOD: Parallelize this
-    for (size_t i : support)
+    for (const size_t i : support)
       result_coeffs[i] = -coeffs[i];
     return Polynomial(field, variable, result_coeffs, support);
   }
@@ -139,9 +139,8 @@ public:
     const size_t degree_plus_one = std::max(a.coeffs.size(), b.coeffs.size());
     std::vector<element_t> result_coeffs(degree_plus_one, a.zero);
     // TODO: Parallelize this
-    for (size_t i = 0; i < degree_plus_one; ++i) {
+    for (size_t i = 0; i < degree_plus_one; ++i)
       result_coeffs[i] = a[i] + b[i];
-    }
     return Polynomial(a.field, a.variable, result_coeffs);
   }
 
@@ -161,7 +160,19 @@ public:
   }
 
   friend Polynomial operator-(const Polynomial &a, const Polynomial &b) {
-    return a + (-b);
+    if (a.field != b.field)
+      throw math_error()
+          << "Cannot subtract polynomials with elements from different fields";
+    if (a.variable != b.variable)
+      throw math_error()
+          << "Cannot subtract polynomials with two different variables '"
+          << a.variable << "' and '" << b.variable << "'";
+    const size_t degree_plus_one = std::max(a.coeffs.size(), b.coeffs.size());
+    std::vector<element_t> result_coeffs(degree_plus_one, a.zero);
+    // TODO: Parallelize this
+    for (size_t i = 0; i < degree_plus_one; ++i)
+      result_coeffs[i] = a[i] - b[i];
+    return Polynomial(a.field, a.variable, result_coeffs);
   }
   friend Polynomial operator-(const Polynomial &p, const element_t k) {
     std::vector<element_t> result_coeffs = p.coeffs;
@@ -181,12 +192,12 @@ public:
   friend Polynomial operator*(const element_t k, const Polynomial &p) {
     if (k == p.zero)
       return p.zero_poly();
-    // k is non-zero, so it doesn't change the support
     const size_t degree_plus_one = p.coeffs.size();
     std::vector<element_t> result_coeffs(degree_plus_one, p.zero);
     // TODO: Parallelize this
     for (const size_t i : p.support)
       result_coeffs[i] = k * p.coeffs[i];
+    // k is non-zero, so it doesn't change the support
     return Polynomial(p.field, p.variable, result_coeffs, p.support);
   }
   friend Polynomial operator*(const Polynomial &p, const element_t k) {
@@ -198,8 +209,16 @@ public:
   friend Polynomial operator*(const Polynomial &p, const integer_t k) {
     return k * p;
   }
-  Polynomial &operator*=(const element_t k) { return *this = *this * k; }
-  Polynomial &operator*=(const integer_t k) { return *this = *this * k; }
+  Polynomial &operator*=(const element_t k) {
+    if (k == zero)
+      return *this = zero_poly();
+    for (const size_t i : support)
+      coeffs[i] *= k;
+    // If k is non-zero, it doesn't change the support, no need to re-calculate
+    // or remove leading zeroes
+    return *this;
+  }
+  Polynomial &operator*=(const integer_t k) { return *this *= field(k); }
 
   friend Polynomial operator*(const Polynomial &a, const Polynomial &b) {
     if (a.field != b.field)
@@ -248,8 +267,6 @@ public:
   friend Polynomial pow_mod(const Polynomial &f, integer_t exp,
                             const Polynomial &mod) {
     Polynomial result = f.one_poly(), base = f;
-    // NOTE: We don't want to mod out by the order q^n - 1 before confirming
-    //       that f is irreducible, so defer this
     while (exp != 0) {
       if (exp % 2 == 1)
         result = (result * base) % mod;

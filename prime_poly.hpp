@@ -56,12 +56,8 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   integer_t cardinality() const override { return q; }
   FieldType type() const override { return FieldType::PrimePoly; }
 
-  value_t zero() const override {
-    return value_t(base_field, f.variable, {base_field.element(0)});
-  }
-  value_t one() const override {
-    return value_t(base_field, f.variable, {base_field.element(1)});
-  }
+  value_t zero() const override { return f.zero_poly(); }
+  value_t one() const override { return f.one_poly(); }
   value_t integer(const integer_t number) const override {
     const base_element_t coeff = base_field(number);
     return value_t(base_field, f.variable, {coeff});
@@ -81,12 +77,12 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
     return element_t(*this, random_poly);
   }
 
-  value_t neg(const value_t a) const override { return (f - a) % f; }
+  value_t neg(const value_t a) const override { return (-a) % f; }
   value_t add(const value_t a, const value_t b) const override {
     return (a + b) % f;
   }
   value_t sub(const value_t a, const value_t b) const override {
-    return (a + f - b) % f;
+    return (a - b) % f;
   }
 
   value_t inv(const value_t a) const override { return inv_mod(a, f); }

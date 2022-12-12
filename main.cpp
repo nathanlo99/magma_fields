@@ -43,46 +43,46 @@ int main(int argc, char *argv[]) {
   //   std::cout << a << " * " << b << " = " << a * b << std::endl;
   // });
 
-  // timeit("Field of cardinality 3^3", []() {
-  //   const auto F3 = SmallPrimeField(3);
-  //   const auto f = Polynomial(F3, "x", {1, 2, 0, 1});
-  //   const auto Z = ZechField(F3, f);
-  //   std::cout << "Z = " << Z << std::endl;
-  //   const auto x = Z.primitive_element();
-  //   for (int i = 0; i < Z.cardinality(); ++i) {
-  //     std::cout << "x^" << i << " = " << (x ^ i) << std::endl;
-  //   }
-  // });
+  timeit("Field of cardinality 3^3", []() {
+    const auto F3 = SmallPrimeField(3);
+    const auto f = Polynomial(F3, "x", {1, 2, 0, 1});
+    const auto Z = ZechField(F3, f);
+    std::cout << "Z = " << Z << std::endl;
+    const auto x = Z.primitive_element();
+    for (int i = 0; i < Z.cardinality(); ++i) {
+      std::cout << "x^" << i << " = " << (x ^ i) << std::endl;
+    }
+  });
 
-  // timeit("Field of cardinality 2^5", []() {
-  //   const auto F2 = SmallPrimeField(2);
-  //   const auto x = Polynomial(F2, "x");
-  //   const auto f = (x ^ 5) + (x ^ 2) + 1;
-  //   const auto GF = PrimePolyField(F2, f);
-  //   std::cout << "GF = " << GF << std::endl;
-  //   std::cout << "GF has cardinality " << GF.cardinality() << std::endl;
+  timeit("Field of cardinality 2^5", []() {
+    const auto F2 = SmallPrimeField(2);
+    const auto x = Polynomial(F2, "x");
+    const auto f = (x ^ 5) + (x ^ 2) + 1;
+    const auto GF = PrimePolyField(F2, f);
+    std::cout << "GF = " << GF << std::endl;
+    std::cout << "GF has cardinality " << GF.cardinality() << std::endl;
 
-  //   const auto x_GF = GF.element(x);
-  //   for (int i = 0; i < GF.cardinality(); ++i) {
-  //     std::cout << "x^" << i << " = " << (x_GF ^ i) << std::endl;
-  //   }
-  // });
+    const auto x_GF = GF.element(x);
+    for (int i = 0; i < GF.cardinality(); ++i) {
+      std::cout << "x^" << i << " = " << (x_GF ^ i) << std::endl;
+    }
+  });
 
   // Untested
-  // timeit("Field of cardinality 2^32", []() {
-  //   const auto F2 = SmallPrimeField(2);
-  //   const auto x = Polynomial(F2, "x");
-  //   const auto f = (x ^ 16) + (x ^ 12) + (x ^ 3) + x + 1;
-  //   const auto F2_16 = ZechField(F2, f);
-  //   std::cout << F2_16 << " has cardinality " << F2_16.cardinality()
-  //             << std::endl;
-  //   const auto z = Polynomial(F2_16, "z");
-  //   const auto g = (z ^ 2) + F2_16.primitive_element() * z + 1;
-  //   const auto F2_32 = ZechPolyField(F2_16, g);
-  //   std::cout << F2_32 << " has cardinality " << F2_32.cardinality()
-  //             << std::endl;
-  //   const auto zg = F2_32.primitive_element();
-  // });
+  timeit("Field of cardinality 2^32", []() {
+    const auto F2 = SmallPrimeField(2);
+    const auto x = Polynomial(F2, "x");
+    const auto f = (x ^ 16) + (x ^ 12) + (x ^ 3) + x + 1;
+    const auto F2_16 = ZechField(F2, f);
+    std::cout << F2_16 << " has cardinality " << F2_16.cardinality()
+              << std::endl;
+    const auto z = Polynomial(F2_16, "z");
+    const auto g = (z ^ 2) + F2_16.primitive_element() * z + 1;
+    const auto F2_32 = ZechPolyField(F2_16, g);
+    std::cout << F2_32 << " has cardinality " << F2_32.cardinality()
+              << std::endl;
+    const auto zg = F2_32.primitive_element();
+  });
 
   // timeit("Factoring",
   //        []() { print_factorization(factor_pk_minus_one(2, 127)); });
