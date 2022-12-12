@@ -3,6 +3,7 @@
 
 #include "field.hpp"
 #include "gmp.hpp"
+#include "logger.hpp"
 #include "random.hpp"
 
 #include <cstdint>
@@ -23,6 +24,8 @@ struct LargePrimeField : Field<integer_t> {
     if (p.fits_uint_p())
       throw math_error() << "Cannot instantiate LargePrimeField with modulus "
                          << p << ", expects a number larger than 2^32";
+    log() << "Done constructing LargePrimeField with cardinality " << p
+          << std::endl;
   }
 
   integer_t characteristic() const override { return p; }
@@ -71,15 +74,11 @@ struct LargePrimeField : Field<integer_t> {
     return (a + p - b) % p;
   }
 
-  // TODO: Use Montgomery modular representation to make this faster
+  // TODO: Use Montgomery modular representation to make this even faster
   value_t inv(const value_t a) const override {
-    value_t r0 = p, r1 = a, s0 = 1, s1 = 0, t0 = 0, t1 = 1;
-    while (r1 != 0) {
-      const value_t q = r0 / r1, r2 = r0 % r1;
-      std::tie(r0, s0, t0, r1, s1, t1) =
-          std::make_tuple(r1, s1, t1, r2, s0 - s1 * q, t0 - t1 * q);
-    }
-    return t0 >= 0 ? t0 : t0 + p;
+    value_t result;
+    mpz_invert(result.get_mpz_t(), a.get_mpz_t(), p.get_mpz_t());
+    return result;
   }
   value_t mul(const value_t a, const value_t b) const override {
     return (a * b) % p;

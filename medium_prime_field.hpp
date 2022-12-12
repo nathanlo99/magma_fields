@@ -10,13 +10,13 @@
 #include <vector>
 
 // MediumPrimeField: FiniteField(p) for primes 2^16 <= p < 2^32
-struct MediumPrimeField : Field<uint32_t> {
-  using value_t = uint32_t;
+struct MediumPrimeField : Field<uint64_t> {
+  using value_t = uint64_t;
   using element_t = FieldElement<MediumPrimeField>;
 
   const value_t p;
 
-  MediumPrimeField(const integer_t p) : p(gmp::to_int(p)) {
+  MediumPrimeField(const integer_t p) : p(gmp::to_uint(p)) {
     if (p <= 0 || !gmp::is_prime(p))
       throw math_error() << "MediumPrimeField expects a positive prime, got "
                          << p;
@@ -26,15 +26,15 @@ struct MediumPrimeField : Field<uint32_t> {
                          << ", expects a number which fits in an unsigned int";
   }
 
-  integer_t characteristic() const override { return p; }
+  integer_t characteristic() const override { return gmp::from_uint(p); }
   uint32_t degree() const override { return 1; }
-  integer_t cardinality() const override { return p; }
+  integer_t cardinality() const override { return gmp::from_uint(p); }
   FieldType type() const override { return FieldType::MediumPrime; }
 
   value_t zero() const override { return 0; }
   value_t one() const override { return 1; }
   value_t integer(const integer_t number) const override {
-    return gmp::to_uint(gmp::unsigned_mod(number, p));
+    return gmp::to_uint(gmp::unsigned_mod(number, gmp::from_uint(p)));
   }
   uint32_t as_integer(const value_t number) const { return number; }
   element_t operator()(const integer_t num) const {

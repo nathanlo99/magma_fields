@@ -16,7 +16,7 @@ struct SmallPrimeField : Field<uint32_t> {
 
   const value_t p;
 
-  SmallPrimeField(const integer_t p) : p(gmp::to_int(p)) {
+  SmallPrimeField(const integer_t p) : p(gmp::to_uint(p)) {
     if (p <= 0 || !gmp::is_prime(p))
       throw math_error() << "SmallPrimeField expects a positive prime, got "
                          << p;

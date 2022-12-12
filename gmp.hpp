@@ -23,13 +23,13 @@ inline void next_prime(integer_t &n) {
 }
 
 inline int64_t to_int(const integer_t n) {
-  if (!n.fits_sint_p())
+  if (!n.fits_slong_p())
     throw math_error() << "Could not convert " << n << " to int: too large";
   return mpz_get_si(n.get_mpz_t());
 }
 
 inline uint64_t to_uint(const integer_t n) {
-  if (!n.fits_uint_p())
+  if (!n.fits_ulong_p())
     throw math_error() << "Could not convert " << n << " to uint: too large";
   return mpz_get_ui(n.get_mpz_t());
 }

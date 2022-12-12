@@ -38,7 +38,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
           << "ZechPolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
     do {
-      f = random_polynomial<true>(base_field, variable, k).monic();
+      f = random_polynomial<true, true>(base_field, variable, k);
     } while (!f.is_irreducible_rabin());
   }
 
@@ -70,7 +70,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   }
   element_t random_element() const {
     const auto random_poly =
-        random_polynomial<false>(base_field, f.variable, k);
+        random_polynomial<false, false>(base_field, f.variable, k);
     return element_t(*this, random_poly);
   }
 

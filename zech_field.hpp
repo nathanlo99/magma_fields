@@ -105,14 +105,14 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
           << " over base_field " << base_field << std::endl;
     // 1. Generate a irreducible polynomial f of degree k
     do {
-      f = random_polynomial<true>(base_field, variable, k).monic();
+      f = random_polynomial<true, true>(base_field, variable, k);
     } while (!f.is_irreducible_rabin());
     log() << "Found an irreducible polynomial of degree " << k << ": '" << f
           << std::endl;
 
     // 2. Generate a polynomial g with full order in Z_q[x]/<f>
     do {
-      g = random_polynomial<false>(base_field, variable, k).monic();
+      g = random_polynomial<false, true>(base_field, variable, k);
     } while (!g.is_primitive_mod(f));
     log() << "Found the primitive polynomial '" << g << "'" << std::endl;
 

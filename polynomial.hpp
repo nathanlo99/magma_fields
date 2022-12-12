@@ -2,6 +2,7 @@
 #pragma once
 
 #include "gmp.hpp"
+#include "logger.hpp"
 #include "prime_factorization.hpp"
 
 #include <string>
@@ -52,7 +53,7 @@ public:
         support() {
     if (coeffs.empty()) {
       this->coeffs = {zero, one};
-      support = {0, 1};
+      support = {1};
       return;
     }
 
@@ -234,7 +235,7 @@ public:
       return Polynomial(field, variable, result_coeffs, {exp});
     }
 
-    Polynomial result(field, variable, {one}, {0}), pow = *this;
+    Polynomial result = one_poly(), pow = *this;
     while (exp > 0) {
       if (exp % 2 == 1)
         result *= pow;
@@ -291,7 +292,7 @@ public:
     if (q.coeffs.back() == 0)
       throw math_error() << "Division by zero: " << p << " / " << q;
     if (p_degree < q_degree)
-      return std::make_pair(Polynomial(p.field, p.variable, {p.zero}), p);
+      return std::make_pair(p.zero_poly(), p);
     const size_t result_degree = p_degree - q_degree;
     const element_t q_leading_coeff = q.coeffs.back(),
                     inv_q_leading_coeff = q_leading_coeff.inv();
@@ -396,13 +397,12 @@ public:
     const Polynomial x = Polynomial(f.field, f.variable);
     for (const Factor &factor : prime_factor(gmp::from_uint(n))) {
       const uint64_t pi = gmp::to_uint(factor.base), ni = n / pi;
-      const Polynomial h = (pow_mod(x, gmp::pow(q, ni), f) + f - x) % f;
+      const Polynomial h = (pow_mod(x, gmp::pow(q, ni), f) - x) % f;
       const Polynomial g = polynomial_gcd(f, h);
       if (g != f.one_poly())
         return false;
     }
-    const Polynomial h = (pow_mod(x, gmp::pow(q, n), f) + f - x) % f;
-    return h == f.zero_poly();
+    return pow_mod(x, gmp::pow(q, n), f) == x;
   }
 
   // More efficient than computing the order and comparing to q - 1
@@ -421,17 +421,23 @@ public:
   }
 };
 
-template <bool exact_degree, class Field>
+template <bool exact_degree, bool monic, class Field>
 static inline Polynomial<Field> random_polynomial(const Field &field,
                                                   const std::string &variable,
                                                   const uint64_t degree) {
   std::vector<typename Field::element_t> coeffs(degree + 1,
                                                 field.element(field.zero()));
-  for (size_t i = 0; i <= degree; ++i)
+  for (size_t i = 0; i < degree; ++i)
     coeffs[i] = field.random_element();
-  if constexpr (exact_degree) {
+
+  // monic is stronger than exact_degree, so handle that first
+  if constexpr (monic) {
+    coeffs[degree] = field.element(field.one());
+  } else if constexpr (exact_degree) {
     while (coeffs[degree] == field.element(field.zero()))
       coeffs[degree] = field.random_element();
+  } else {
+    coeffs[degree] = field.random_element();
   }
   return Polynomial(field, variable, coeffs);
 }

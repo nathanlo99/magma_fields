@@ -38,20 +38,21 @@ struct Lattice {
   // 4. If p < 2^16                          -> PrimePolyField
   // 5. Finally                              -> GeneralPolyField
   std::shared_ptr<AbstractField> add_field(const uint64_t k) {
-    std::cout << "add_field called on lattice with characteristic " << p
-              << " and degree " << k << std::endl;
+    log() << "add_field called on lattice with characteristic " << p
+          << " and degree " << k << std::endl;
 
     // 1. Prime fields
     if (k == 1) {
       // If we already have a prime field, just return that
       if (fields.size() > 0)
         return fields[0];
-      if (p < (1_mpz << 16))
+      if (p.fits_ushort_p())
         fields.push_back(std::make_shared<SmallPrimeField>(p));
-      else if (p < (1_mpz << 32))
+      else if (p.fits_uint_p())
         fields.push_back(std::make_shared<MediumPrimeField>(p));
       else
         fields.push_back(std::make_shared<LargePrimeField>(p));
+      log() << "Done creating prime field" << std::endl;
       return fields.back();
     }
 
@@ -107,26 +108,26 @@ struct Lattice {
       // None of the factors of n had p^ell <= 2^20, so return PrimePolyField
       switch (prime_field->type()) {
       case FieldType::SmallPrime: {
-        const SmallPrimeField &S =
+        const SmallPrimeField &P =
             dynamic_cast<SmallPrimeField &>(*prime_field);
         fields.push_back(
-            std::make_shared<PrimePolyField<SmallPrimeField>>(S, "z", k));
+            std::make_shared<PrimePolyField<SmallPrimeField>>(P, "z", k));
         return fields.back();
       }
 
       case FieldType::MediumPrime: {
-        const MediumPrimeField &S =
+        const MediumPrimeField &P =
             dynamic_cast<MediumPrimeField &>(*prime_field);
         fields.push_back(
-            std::make_shared<PrimePolyField<MediumPrimeField>>(S, "z", k));
+            std::make_shared<PrimePolyField<MediumPrimeField>>(P, "z", k));
         return fields.back();
       }
 
       case FieldType::LargePrime: {
-        const LargePrimeField &S =
+        const LargePrimeField &P =
             dynamic_cast<LargePrimeField &>(*prime_field);
         fields.push_back(
-            std::make_shared<PrimePolyField<LargePrimeField>>(S, "z", k));
+            std::make_shared<PrimePolyField<LargePrimeField>>(P, "z", k));
         return fields.back();
       }
 
@@ -180,7 +181,7 @@ struct Lattice {
 
   friend std::ostream &operator<<(std::ostream &os, const Lattice &lattice) {
     for (const auto &field : lattice.fields) {
-      std::cout << " - " << field << ": " << field->to_string() << std::endl;
+      os << " - " << field << ": " << field->to_string() << std::endl;
     }
     return os;
   }

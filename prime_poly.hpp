@@ -23,10 +23,10 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   PrimePolyField(const BaseField &base_field, const Polynomial<BaseField> &f)
       : base_field(base_field), f(f), p(base_field.characteristic()),
         k(base_field.degree() * f.degree()), q(gmp::pow(p, k)) {
-    if (base_field.type() != FieldType::SmallPrime)
-      throw math_error()
-          << "PrimePolyField expected SmallPrimeField as base field, got "
-          << field_type_to_string(base_field.type());
+    // if (base_field.type() != FieldType::SmallPrime)
+    //   throw math_error()
+    //       << "PrimePolyField expected SmallPrimeField as base field, got "
+    //       << field_type_to_string(base_field.type());
     if (!f.is_irreducible_rabin())
       throw math_error()
           << "PrimePolyField expected irreducible polynomial, got " << f;
@@ -37,12 +37,14 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
       : base_field(base_field), f(base_field, variable),
         p(base_field.characteristic()), k(base_field.degree() * k),
         q(gmp::pow(p, this->k)) {
-    if (base_field.type() != FieldType::SmallPrime)
-      throw math_error()
-          << "PrimePolyField expected SmallPrimeField as base field, got "
-          << field_type_to_string(base_field.type());
+    // if (base_field.type() != FieldType::SmallPrime)
+    //   throw math_error()
+    //       << "PrimePolyField expected SmallPrimeField as base field, got "
+    //       << field_type_to_string(base_field.type());
+    log() << "Looking for an irreducible polynomial with degree " << k
+          << " over " << base_field << std::endl;
     do {
-      f = random_polynomial<true>(base_field, variable, k).monic();
+      f = random_polynomial<true, true>(base_field, variable, k);
     } while (!f.is_irreducible_rabin());
     log() << "Constructed PrimePolyField over " << base_field << " with degree "
           << k << std::endl;
@@ -75,7 +77,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   }
   element_t random_element() const {
     const auto random_poly =
-        random_polynomial<false>(base_field, f.variable, k);
+        random_polynomial<false, false>(base_field, f.variable, k);
     return element_t(*this, random_poly);
   }
 
