@@ -93,8 +93,9 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const ZechPolyField &field) {
-    return os << "ZechPolyField: degree " << field.f.degree()
-              << " extension with defining polynomial '" << field.f << "'";
+    return os << "Degree " << field.f.degree() << " extension with cardinality "
+              << field.characteristic() << "^" << field.degree() << " = "
+              << field.cardinality();
   }
 
   std::string to_string() const override {

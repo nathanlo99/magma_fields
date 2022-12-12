@@ -210,7 +210,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   }
 
   friend std::ostream &operator<<(std::ostream &os, const ZechField &field) {
-    return os << "ZechField: degree " << field.f.degree()
+    return os << "Degree " << field.f.degree()
               << " extension with defining polynomial '" << field.f << "'";
   }
 

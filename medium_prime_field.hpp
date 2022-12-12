@@ -91,7 +91,7 @@ struct MediumPrimeField : Field<uint64_t> {
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const MediumPrimeField &field) {
-    return os << "MediumPrimeField: Prime field with order " << field.p;
+    return os << "Prime field with order " << field.p;
   }
 
   std::string to_string() const override {

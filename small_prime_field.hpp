@@ -92,7 +92,7 @@ struct SmallPrimeField : Field<uint32_t> {
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const SmallPrimeField &field) {
-    return os << "SmallPrimeField: Prime field with order " << field.p;
+    return os << "Prime field with order " << field.p;
   }
 
   std::string to_string() const override {

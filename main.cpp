@@ -100,9 +100,10 @@ int main(int argc, char *argv[]) {
     manager.FiniteField(2, 8);   // ZechField
     manager.FiniteField(2, 103); // PrimePolyField
     manager.FiniteField(2, 120); // ZechPoly over a ZechField of degree 20
-    for (integer_t p = 2; p < 10000000000000_mpz; p *= 2, gmp::next_prime(p)) {
-      manager.FiniteField(p, 10);
-    }
+    // for (integer_t p = 2; p < 10000000000000_mpz; p *= 2, gmp::next_prime(p))
+    // {
+    //   manager.FiniteField(p, 10);
+    // }
     std::cout << manager << std::endl;
   });
 

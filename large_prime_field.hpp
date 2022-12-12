@@ -90,7 +90,7 @@ struct LargePrimeField : Field<integer_t> {
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const LargePrimeField &field) {
-    return os << "LargePrimeField: Prime field with order " << field.p;
+    return os << "Prime field with order " << field.p;
   }
 
   std::string value_to_string(const value_t value) const override {
