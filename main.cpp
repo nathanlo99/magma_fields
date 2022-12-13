@@ -94,17 +94,20 @@ int main(int argc, char *argv[]) {
   // });
 
   timeit("Debug demo", []() {
-    LatticeManager manager;
-    manager.FiniteField(5, 4);   // Zech
-    manager.FiniteField(3, 24);  // Two-step: ZechPoly over a Zech
-    manager.FiniteField(2, 8);   // ZechField
-    manager.FiniteField(2, 103); // PrimePolyField
-    manager.FiniteField(2, 120); // ZechPoly over a ZechField of degree 20
+    FiniteField(5, 4);   // Zech
+    FiniteField(3, 24);  // Two-step: ZechPoly over a Zech
+    FiniteField(2, 8);   // ZechField
+    FiniteField(2, 103); // PrimePolyField
+    FiniteField(2, 120); // ZechPoly over a ZechField of degree 20
     // for (integer_t p = 2; p < 10000000000000_mpz; p *= 2, gmp::next_prime(p))
     // {
-    //   manager.FiniteField(p, 10);
+    //   FiniteField(p, 10);
     // }
-    std::cout << manager << std::endl;
+    FiniteField(2, 1);
+    FiniteField(2, 53);
+    FiniteField(2, 530);
+    FiniteField(2, 128);
+    print_lattices(std::cout);
   });
 
   // timeit("Polynomial gcd's", []() {
@@ -148,14 +151,6 @@ int main(int argc, char *argv[]) {
   //     std::cout << num_irreducible
   //               << " irreducible polynomials, with shortest = "
   //               << best_polynomial << std::endl;
-  //   }
-  // });
-
-  // timeit("Generating random polynomials", []() {
-  //   const auto F = SmallPrimeField(5);
-  //   for (int i = 0; i < 10; ++i) {
-  //     const Polynomial p = random_polynomial<false, true>(F, "x", 4);
-  //     std::cout << p << std::endl;
   //   }
   // });
 }

@@ -11,6 +11,6 @@ find_package(GMP REQUIRED)
 
 include_directories(magma_fields PUBLIC ${CMAKE_SOURCE_DIR} ${GMP_INCLUDE_DIRS})
 
-add_executable(magma_fields main.cpp random.cpp)
+add_executable(magma_fields main.cpp lattice.cpp random.cpp)
 target_link_libraries(magma_fields gmp gmpxx)
 # set_target_properties(magma_fields PROPERTIES COMPILE_FLAGS "-DNDEBUG")

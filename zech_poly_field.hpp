@@ -37,9 +37,14 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
       throw math_error()
           << "ZechPolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
+    log() << "Creating degree " << k << " extension over " << base_field
+          << std::endl;
     do {
       f = random_polynomial<true, true>(base_field, variable, k);
     } while (!f.is_irreducible_rabin());
+    log() << "Found the irreducible polynomial " << f << std::endl;
+    log() << "Constructed PrimePolyField over " << base_field << " with degree "
+          << k << std::endl;
   }
 
   integer_t characteristic() const override { return p; }

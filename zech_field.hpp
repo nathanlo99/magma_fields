@@ -26,6 +26,8 @@ std::vector<uint32_t> compute_zech_table(const uint32_t p, const uint32_t k,
                                          const uint32_t q,
                                          const Polynomial<BaseField> &f,
                                          const Polynomial<BaseField> &g) {
+  log() << "Computing Zech table with f = " << f << " and g = " << g
+        << std::endl;
   // Compute the Zech logarithm table, find s[r] such that x^s[r] = x^r + 1
   std::vector<uint32_t> result(q, -1);
   const auto base_field = f.field;
@@ -54,6 +56,7 @@ std::vector<uint32_t> compute_zech_table(const uint32_t p, const uint32_t k,
       result[i] = log_x[next_index[i]];
   }
 
+  log() << "Done computing Zech table" << std::endl;
   return result;
 }
 
@@ -108,7 +111,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
       f = random_polynomial<true, true>(base_field, variable, k);
     } while (!f.is_irreducible_rabin());
     log() << "Found an irreducible polynomial of degree " << k << ": '" << f
-          << std::endl;
+          << "'" << std::endl;
 
     // 2. Generate a polynomial g with full order in Z_q[x]/<f>
     do {

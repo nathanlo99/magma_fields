@@ -46,9 +46,9 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
     do {
       f = random_polynomial<true, true>(base_field, variable, k);
     } while (!f.is_irreducible_rabin());
+    log() << "Found the irreducible polynomial " << f << std::endl;
     log() << "Constructed PrimePolyField over " << base_field << " with degree "
           << k << std::endl;
-    log() << "Found the irreducible polynomial " << f << std::endl;
   }
 
   integer_t characteristic() const override { return p; }
