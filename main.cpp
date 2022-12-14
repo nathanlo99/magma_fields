@@ -3,6 +3,7 @@
 #include "large_prime_field.hpp"
 #include "lattice.hpp"
 #include "medium_prime_field.hpp"
+#include "polynomial.hpp"
 #include "polynomial_factorization.hpp"
 #include "prime_factorization.hpp"
 #include "prime_poly.hpp"
@@ -153,24 +154,61 @@ int main(int argc, char *argv[]) {
     }
   });
 
-  timeit("Polynomial factorization", []() {
-    const auto F3 = SmallPrimeField(3);
-    const auto x = Polynomial(F3, "x");
-    const auto F9 = PrimePolyField(F3, (x ^ 2) + 1);
-    const auto F81 = PrimePolyField(F3, (x ^ 4) + x + 2);
+  timeit("Odd characteristic polynomial factorization", []() {
+    const auto P = SmallPrimeField(3);
+    const auto x = Polynomial(P, "x");
+    const auto F = PrimePolyField(P, (x ^ 4) + x + 2);
 
-    const auto w = Polynomial(F81, "w");
+    const auto w = Polynomial(F, "w");
     const auto f = (w ^ 2) + w + 2;
 
-    while (true) {
-      const auto a = F81.random_element();
-      const auto fa = f.at(a);
-      if (fa == 0) {
-        std::cout << "a = " << a << std::endl;
-        break;
+    print_polynomial_factorization(equal_degree_factorization(f, 1));
+  });
+
+  timeit("p = 2 polynomial factorization", []() {
+    const auto P = SmallPrimeField(2);
+    const auto x = Polynomial(P, "x");
+    const auto F = PrimePolyField(P, (x ^ 4) + (x ^ 3) + 1);
+
+    const auto w = Polynomial(F, "w");
+    const auto f = (w ^ 2) + w + 1;
+
+    print_polynomial_factorization(equal_degree_factorization(f, 1));
+
+    const auto r = find_root(f);
+    std::cout << "Root of " << f << ": " << r << std::endl;
+  });
+
+  timeit("Root-finding fuzz test", []() {
+    const std::array<integer_t, 2> primes = {2, 3};
+    for (const integer_t &prime : primes) {
+      const auto P = SmallPrimeField(prime);
+      for (int base_degree = 2; base_degree <= 5; ++base_degree) {
+        for (int extension_degree = 2 * base_degree; extension_degree <= 10;
+             extension_degree += base_degree) {
+          // Create an extension field of degree [extension_degree] and try and
+          // find roots polynomials of irreducible polynomials in P[x]
+          const auto f =
+              random_irreducible_polynomial(P, "x", extension_degree);
+          const auto F = PrimePolyField(P, f);
+          log() << "Creating the field extension over " << P
+                << " defined by f = " << f << std::endl;
+
+          for (int i = 0; i < 4; ++i) {
+            const auto h = random_irreducible_polynomial(P, "w", base_degree);
+
+            // Lift h to F and factor it in F
+            std::vector<integer_t> coeffs(h.degree() + 1, 0);
+            for (size_t i : h.support)
+              coeffs[i] = h.coeffs[i].value;
+            const auto lifted_h = Polynomial(F, "w", coeffs);
+
+            std::cout << "h = " << lifted_h << std::endl;
+            const auto root = find_root(lifted_h);
+            std::cout << "Root of " << h << " is " << root << std::endl;
+          }
+        }
       }
     }
-
-    print_polynomial_factorization(equal_degree_factorization_odd(f, 1));
   });
 }

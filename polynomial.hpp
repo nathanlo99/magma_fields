@@ -465,3 +465,16 @@ static inline Polynomial<Field> random_polynomial(const Field &field,
   }
   return Polynomial(field, variable, coeffs);
 }
+
+template <class Field>
+static inline Polynomial<Field>
+random_irreducible_polynomial(const Field &field, const std::string &variable,
+                              const uint64_t degree) {
+  while (true) {
+    const Polynomial<Field> &f =
+        random_polynomial<true, true>(field, variable, degree);
+    if (f.is_irreducible_rabin())
+      return f;
+  }
+  __builtin_unreachable();
+}
