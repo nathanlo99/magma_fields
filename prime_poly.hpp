@@ -73,7 +73,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   }
   element_t random_element() const {
     const auto random_poly =
-        random_polynomial<false, false>(base_field, f.variable, k);
+        random_polynomial<false, false>(base_field, f.variable, k - 1);
     return element_t(*this, random_poly);
   }
 

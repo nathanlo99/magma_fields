@@ -3,6 +3,7 @@
 #include "large_prime_field.hpp"
 #include "lattice.hpp"
 #include "medium_prime_field.hpp"
+#include "polynomial_factorization.hpp"
 #include "prime_factorization.hpp"
 #include "prime_poly.hpp"
 #include "random.hpp"
@@ -93,22 +94,18 @@ int main(int argc, char *argv[]) {
   //   F.primitive_element() << std::endl;
   // });
 
-  timeit("Debug demo", []() {
-    FiniteField(5, 4);   // Zech
-    FiniteField(3, 24);  // Two-step: ZechPoly over a Zech
-    FiniteField(2, 8);   // ZechField
-    FiniteField(2, 103); // PrimePolyField
-    FiniteField(2, 120); // ZechPoly over a ZechField of degree 20
-    // for (integer_t p = 2; p < 10000000000000_mpz; p *= 2, gmp::next_prime(p))
-    // {
-    //   FiniteField(p, 10);
-    // }
-    FiniteField(2, 1);
-    FiniteField(2, 53);
-    FiniteField(2, 530);
-    FiniteField(2, 128);
-    print_lattices(std::cout);
-  });
+  // timeit("Debug demo", []() {
+  //   FiniteField(5, 4);   // Zech
+  //   FiniteField(3, 24);  // Two-step: ZechPoly over a Zech
+  //   FiniteField(2, 8);   // ZechField
+  //   FiniteField(2, 103); // PrimePolyField
+  //   FiniteField(2, 120); // ZechPoly over a ZechField of degree 20
+  //   FiniteField(2, 1);
+  //   FiniteField(2, 53);
+  //   FiniteField(2, 530);
+  //   FiniteField(2, 128);
+  //   print_lattices(std::cout);
+  // });
 
   // timeit("Polynomial gcd's", []() {
   //   const auto F = SmallPrimeField(127);
@@ -122,35 +119,58 @@ int main(int argc, char *argv[]) {
   //             << std::endl;
   // });
 
-  // timeit("Rabin irreducibility algorithm", []() {
-  //   const integer_t p = 2;
-  //   const auto F = SmallPrimeField(p);
-  //   for (uint64_t degree = 1; degree <= 11; ++degree) {
-  //     std::cout << "For degree " << degree << "... " << std::flush;
-  //     uint64_t least_support = degree + 2;
-  //     Polynomial best_polynomial = Polynomial(F, "x");
-  //     uint64_t num_irreducible = 0;
-  //     for (integer_t iter = 0; iter < gmp::pow(p, degree + 1); ++iter) {
-  //       std::vector<integer_t> coeffs(degree + 1);
-  //       integer_t coeff_idx = iter;
-  //       for (size_t i = 0; i <= degree; ++i) {
-  //         coeffs[i] = coeff_idx % p;
-  //         coeff_idx /= p;
-  //       }
-  //       if (coeffs[degree] == 0 || coeffs[0] == 0)
-  //         continue;
-  //       const Polynomial f = Polynomial(F, "x", coeffs);
-  //       if (!f.is_irreducible_rabin())
-  //         continue;
-  //       num_irreducible++;
-  //       if (f.support.size() < least_support) {
-  //         least_support = f.support.size();
-  //         best_polynomial = f;
-  //       }
-  //     }
-  //     std::cout << num_irreducible
-  //               << " irreducible polynomials, with shortest = "
-  //               << best_polynomial << std::endl;
-  //   }
-  // });
+  timeit("Rabin irreducibility algorithm", []() {
+    const integer_t p = 3;
+    const auto F = SmallPrimeField(p);
+    for (uint64_t degree = 1; degree <= 4; ++degree) {
+      std::cout << "For degree " << degree << "... " << std::endl;
+      uint64_t least_support = degree + 2;
+      Polynomial best_polynomial = Polynomial(F, "x");
+      uint64_t num_irreducible = 0;
+      for (integer_t iter = 0; iter < gmp::pow(p, degree + 1); ++iter) {
+        std::vector<integer_t> coeffs(degree + 1);
+        integer_t coeff_idx = iter;
+        for (size_t i = 0; i <= degree; ++i) {
+          coeffs[i] = coeff_idx % p;
+          coeff_idx /= p;
+        }
+        if (coeffs[degree] == 0 || coeffs[0] == 0)
+          continue;
+        const Polynomial f = Polynomial(F, "x", coeffs);
+        if (!f.is_irreducible_rabin())
+          continue;
+        // std::cout << f << std::endl;
+        num_irreducible++;
+        if (f.support.size() < least_support) {
+          least_support = f.support.size();
+          best_polynomial = f;
+        }
+      }
+      std::cout << num_irreducible
+                << " irreducible polynomials, with shortest = "
+                << best_polynomial << std::endl
+                << std::endl;
+    }
+  });
+
+  timeit("Polynomial factorization", []() {
+    const auto F3 = SmallPrimeField(3);
+    const auto x = Polynomial(F3, "x");
+    const auto F9 = PrimePolyField(F3, (x ^ 2) + 1);
+    const auto F81 = PrimePolyField(F3, (x ^ 4) + x + 2);
+
+    const auto w = Polynomial(F81, "w");
+    const auto f = (w ^ 2) + w + 2;
+
+    while (true) {
+      const auto a = F81.random_element();
+      const auto fa = f.at(a);
+      if (fa == 0) {
+        std::cout << "a = " << a << std::endl;
+        break;
+      }
+    }
+
+    print_polynomial_factorization(equal_degree_factorization_odd(f, 1));
+  });
 }

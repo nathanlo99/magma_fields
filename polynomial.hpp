@@ -339,6 +339,13 @@ public:
            a.coeffs == b.coeffs;
   }
 
+  element_t at(const element_t &a) const {
+    element_t result = zero;
+    for (int d = coeffs.size() - 1; d >= 0; --d)
+      result = result * a + coeffs[d];
+    return result;
+  }
+
   std::string to_string() const {
     std::stringstream ss;
     ss << *this;
@@ -419,7 +426,7 @@ public:
       if (g != f.one_poly())
         return false;
     }
-    return pow_mod(x, gmp::pow(q, n), f) == x;
+    return (pow_mod(x, gmp::pow(q, n), f) - x) % f == f.zero_poly();
   }
 
   // More efficient than computing the order and comparing to q - 1
