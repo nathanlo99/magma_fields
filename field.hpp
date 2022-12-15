@@ -120,7 +120,6 @@ template <class Value> struct Field : Indexed<Field<Value>>, AbstractField {
         }
       }
     }
-    assert(result == slow_order(c));
     return result;
   }
 
@@ -137,18 +136,6 @@ template <class Value> struct Field : Indexed<Field<Value>>, AbstractField {
         return false;
     }
     return true;
-  }
-
-  integer_t slow_order(const value_t c) const {
-    if (c == zero())
-      return 0;
-    value_t power = c;
-    integer_t exp = 1;
-    while (power != one()) {
-      power = mul(power, c);
-      exp += 1;
-    }
-    return exp;
   }
 
   virtual std::string value_to_string(const value_t a) const = 0;
@@ -171,13 +158,6 @@ template <typename Field> struct FieldElement {
                        "element with different base field");
     value = other.value;
     return *this;
-  }
-
-  element_t zero(const Field &field) const {
-    return FieldElement(field, field.zero());
-  }
-  element_t one(const Field &field) const {
-    return FieldElement(field, field.one());
   }
 
   element_t operator-() const { return element_t(field, field.neg(value)); }
@@ -219,14 +199,14 @@ template <typename Field> struct FieldElement {
     return b.field(a) * b;
   }
   friend element_t operator*(const element_t &a, const integer_t b) {
-    return a * a.field(b);
+    return b * a;
   }
 
   friend bool operator==(const integer_t a, const element_t &b) {
     return b.field.eq(b.field.integer(a), b.value);
   }
   friend bool operator==(const element_t &a, const integer_t b) {
-    return a.field.eq(a.value, a.field.integer(b));
+    return b == a;
   }
 
   friend std::ostream &operator<<(std::ostream &os, const FieldElement &val) {

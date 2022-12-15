@@ -6,6 +6,18 @@
 #include "polynomial.hpp"
 #include <vector>
 
+template <class Field>
+static inline Polynomial<Field>
+get_irreducible_polynomial(const Field &field, const std::string &variable,
+                           const uint64_t degree) {
+  while (true) {
+    const Polynomial<Field> &f =
+        random_polynomial<true, true>(field, variable, degree);
+    if (f.is_irreducible_rabin())
+      return f;
+  }
+}
+
 template <class Field> struct PolynomialFactor {
   Polynomial<Field> base;
   uint64_t exp;

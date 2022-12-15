@@ -179,53 +179,33 @@ int main(int argc, char *argv[]) {
     std::cout << "Root of " << f << ": " << r << std::endl;
   });
 
-  /*
   timeit("Root-finding fuzz test", []() {
     const std::array<integer_t, 2> primes = {2, 3};
     for (const integer_t &prime : primes) {
       const auto P = SmallPrimeField(prime);
-      for (int base_degree = 2; base_degree <= 5; ++base_degree) {
-        for (int extension_degree = 2 * base_degree; extension_degree <= 10;
+      for (int base_degree = 3; base_degree <= 5; ++base_degree) {
+        for (int extension_degree = 2 * base_degree; extension_degree <= 20;
              extension_degree += base_degree) {
           // Create an extension field of degree [extension_degree] and try and
           // find roots polynomials of irreducible polynomials in P[x]
-          const auto f =
-              random_irreducible_polynomial(P, "x", extension_degree);
+          const auto f = get_irreducible_polynomial(P, "x", extension_degree);
           const auto F = PrimePolyField(P, f);
           log() << "Creating the field extension over " << P
                 << " defined by f = " << f << std::endl;
 
           for (int i = 0; i < 4; ++i) {
-            const auto h = random_irreducible_polynomial(P, "w", base_degree);
+            const auto h = get_irreducible_polynomial(P, "w", base_degree);
 
             // Lift h to F and factor it in F
             std::vector<integer_t> coeffs(h.degree() + 1, 0);
             for (size_t i : h.support)
               coeffs[i] = h.coeffs[i].value;
             const auto lifted_h = Polynomial(F, "w", coeffs);
-
-            std::cout << "h = " << lifted_h << std::endl;
             const auto root = find_root(lifted_h);
             std::cout << "Root of " << h << " is " << root << std::endl;
           }
         }
       }
     }
-  });
-  */
-
-  timeit("Debug root-finding", []() {
-    const auto P = SmallPrimeField(3);
-    const auto x = Polynomial(P, "x");
-    const auto f = (x ^ 6) + (x ^ 4) + 2 * (x ^ 3) + 1;
-
-    const auto F = PrimePolyField(P, f);
-    const auto w = Polynomial(F, "w");
-    const auto h = (w ^ 3) + 2 * w + 1;
-
-    print_polynomial_factorization(equal_degree_factorization(h, 1));
-
-    const auto root = find_root(h);
-    std::cout << root << std::endl;
   });
 }

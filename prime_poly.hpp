@@ -1,12 +1,11 @@
 
 #pragma once
 
-#include <iostream>
-
 #include "field.hpp"
 #include "gmp.hpp"
 #include "logger.hpp"
 #include "polynomial.hpp"
+#include "polynomial_factorization.hpp"
 
 template <class BaseField>
 struct PrimePolyField : Field<Polynomial<BaseField>> {
@@ -43,9 +42,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
     //       << field_type_to_string(base_field.type());
     log() << "Looking for an irreducible polynomial with degree " << k
           << " over " << base_field << std::endl;
-    do {
-      f = random_polynomial<true, true>(base_field, variable, k);
-    } while (!f.is_irreducible_rabin());
+    f = get_irreducible_polynomial(base_field, variable, k);
     log() << "Found the irreducible polynomial " << f << std::endl;
     log() << "Constructed PrimePolyField over " << base_field << " with degree "
           << k << std::endl;
