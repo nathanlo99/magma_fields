@@ -3,13 +3,78 @@
 
 #include "error.hpp"
 #include "field.hpp"
+#include "gmp.hpp"
 #include "polynomial.hpp"
+#include "small_prime_field.hpp"
+#include <sstream>
 #include <vector>
+
+constexpr std::string_view irreducible_polynomial_file =
+    "tables/irreducible_polynomials.txt";
+
+inline std::map<std::pair<uint64_t, uint64_t>, std::vector<uint64_t>>
+    irreducible_polynomials;
+
+inline void load_cached_irreducible_polynomials() {
+  std::ifstream ifs(irreducible_polynomial_file);
+  std::string line;
+  while (std::getline(ifs, line)) {
+    std::istringstream iss(line);
+    uint64_t p, degree;
+    iss >> p >> degree;
+    std::vector<uint64_t> coeffs(degree + 1);
+    for (size_t i = 0; i <= degree; ++i)
+      iss >> coeffs[i];
+    const auto key = std::make_pair(p, degree);
+    irreducible_polynomials[key] = coeffs;
+  }
+  log() << "Finished loading " << irreducible_polynomials.size()
+        << " irreducible polynomials from cache" << std::endl;
+}
+
+template <class Field>
+inline void write_irreducible_polynomial(const Polynomial<Field> &f) {
+  static std::ofstream ofs(irreducible_polynomial_file, std::ios::app);
+
+  assert(f.field.degree() == 1);
+  const uint64_t p = gmp::to_uint(f.field.characteristic()),
+                 degree = f.degree();
+  const auto key = std::make_pair(p, degree);
+  if (irreducible_polynomials.count(key) > 0)
+    return;
+  std::vector<uint64_t> coeffs;
+  for (size_t i = 0; i <= degree; ++i)
+    coeffs.push_back(f.coeffs[i].value);
+  irreducible_polynomials[key] = coeffs;
+
+  ofs << p << " " << degree;
+  for (size_t i = 0; i <= degree; ++i)
+    ofs << " " << coeffs[i];
+  ofs << std::endl;
+}
+
+template <class Field>
+Polynomial<Field> cache_to_polynomial(const Field &field,
+                                      const std::string &variable,
+                                      const std::vector<uint64_t> coeffs) {
+  std::vector<typename Field::element_t> result_coeffs;
+  for (size_t i = 0; i < coeffs.size(); ++i) {
+    result_coeffs.push_back(field(gmp::from_uint(coeffs[i])));
+  }
+  return Polynomial(field, variable, result_coeffs);
+}
 
 template <class Field>
 static inline Polynomial<Field>
 get_irreducible_polynomial(const Field &field, const std::string &variable,
                            const uint64_t degree) {
+  if (field.degree() == 1) {
+    const auto key =
+        std::make_pair(gmp::to_uint(field.characteristic()), degree);
+    if (irreducible_polynomials.count(key) > 0)
+      return cache_to_polynomial(field, variable, irreducible_polynomials[key]);
+  }
+
   while (true) {
     const Polynomial<Field> &f =
         random_polynomial<true, true>(field, variable, degree);

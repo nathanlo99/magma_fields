@@ -17,8 +17,9 @@
 #include <iostream>
 
 inline void init_all() {
-  load_cached_factorizations();
   init_gmp_random_state();
+  load_cached_factorizations();
+  load_cached_irreducible_polynomials();
 }
 
 int main(int argc, char *argv[]) {
@@ -95,18 +96,18 @@ int main(int argc, char *argv[]) {
   //   F.primitive_element() << std::endl;
   // });
 
-  // timeit("Debug demo", []() {
-  //   FiniteField(5, 4);   // Zech
-  //   FiniteField(3, 24);  // Two-step: ZechPoly over a Zech
-  //   FiniteField(2, 8);   // ZechField
-  //   FiniteField(2, 103); // PrimePolyField
-  //   FiniteField(2, 120); // ZechPoly over a ZechField of degree 20
-  //   FiniteField(2, 1);
-  //   FiniteField(2, 53);
-  //   FiniteField(2, 530);
-  //   FiniteField(2, 128);
-  //   print_lattices(std::cout);
-  // });
+  timeit("Debug demo", []() {
+    FiniteField(5, 4);   // Zech
+    FiniteField(3, 24);  // Two-step: ZechPoly over a Zech
+    FiniteField(2, 8);   // ZechField
+    FiniteField(2, 103); // PrimePolyField
+    FiniteField(2, 120); // ZechPoly over a ZechField of degree 20
+    FiniteField(2, 1);
+    FiniteField(2, 53);
+    FiniteField(2, 530);
+    FiniteField(2, 128);
+    print_lattices(std::cout);
+  });
 
   // timeit("Polynomial gcd's", []() {
   //   const auto F = SmallPrimeField(127);
@@ -119,40 +120,6 @@ int main(int argc, char *argv[]) {
   //   std::cout << "The gcd of " << f << " and " << g << " is " << gcd
   //             << std::endl;
   // });
-
-  timeit("Rabin irreducibility algorithm", []() {
-    const integer_t p = 3;
-    const auto F = SmallPrimeField(p);
-    for (uint64_t degree = 1; degree <= 4; ++degree) {
-      std::cout << "For degree " << degree << "... " << std::endl;
-      uint64_t least_support = degree + 2;
-      Polynomial best_polynomial = Polynomial(F, "x");
-      uint64_t num_irreducible = 0;
-      for (integer_t iter = 0; iter < gmp::pow(p, degree + 1); ++iter) {
-        std::vector<integer_t> coeffs(degree + 1);
-        integer_t coeff_idx = iter;
-        for (size_t i = 0; i <= degree; ++i) {
-          coeffs[i] = coeff_idx % p;
-          coeff_idx /= p;
-        }
-        if (coeffs[degree] == 0 || coeffs[0] == 0)
-          continue;
-        const Polynomial f = Polynomial(F, "x", coeffs);
-        if (!f.is_irreducible_rabin())
-          continue;
-        // std::cout << f << std::endl;
-        num_irreducible++;
-        if (f.support.size() < least_support) {
-          least_support = f.support.size();
-          best_polynomial = f;
-        }
-      }
-      std::cout << num_irreducible
-                << " irreducible polynomials, with shortest = "
-                << best_polynomial << std::endl
-                << std::endl;
-    }
-  });
 
   timeit("Odd characteristic polynomial factorization", []() {
     const auto P = SmallPrimeField(3);
@@ -179,6 +146,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Root of " << f << ": " << r << std::endl;
   });
 
+  /*
   timeit("Root-finding fuzz test", []() {
     const std::array<integer_t, 2> primes = {2, 3};
     for (const integer_t &prime : primes) {
@@ -208,4 +176,5 @@ int main(int argc, char *argv[]) {
       }
     }
   });
+  */
 }

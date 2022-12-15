@@ -49,6 +49,16 @@ struct Lattice {
   }
 };
 
+inline void print_lattices(std::ostream &os) {
+  os << std::endl;
+  os << "------- LATTICES -------" << std::endl;
+  for (const auto &[p, lattice] : lattices) {
+    os << "Lattice for prime " << p << ": " << std::endl;
+    os << lattice << std::endl << std::endl;
+  }
+  os << "------------------------" << std::endl;
+}
+
 inline std::shared_ptr<AbstractField> FiniteField(const integer_t p,
                                                   const uint64_t k = 1) {
   if (p < 0 || !gmp::is_prime(p))
@@ -60,12 +70,7 @@ inline std::shared_ptr<AbstractField> FiniteField(const integer_t p,
   return lattices.at(p).add_field(k);
 }
 
-inline void print_lattices(std::ostream &os) {
-  os << std::endl;
-  os << "------- LATTICES -------" << std::endl;
-  for (const auto &[p, lattice] : lattices) {
-    os << "Lattice for prime " << p << ": " << std::endl;
-    os << lattice << std::endl << std::endl;
-  }
-  os << "------------------------" << std::endl;
+inline void Embed(const std::shared_ptr<AbstractField> &E,
+                  const std::shared_ptr<AbstractField> &F) {
+  //
 }
