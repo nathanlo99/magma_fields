@@ -179,6 +179,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Root of " << f << ": " << r << std::endl;
   });
 
+  /*
   timeit("Root-finding fuzz test", []() {
     const std::array<integer_t, 2> primes = {2, 3};
     for (const integer_t &prime : primes) {
@@ -210,5 +211,21 @@ int main(int argc, char *argv[]) {
         }
       }
     }
+  });
+  */
+
+  timeit("Debug root-finding", []() {
+    const auto P = SmallPrimeField(3);
+    const auto x = Polynomial(P, "x");
+    const auto f = (x ^ 6) + (x ^ 4) + 2 * (x ^ 3) + 1;
+
+    const auto F = PrimePolyField(P, f);
+    const auto w = Polynomial(F, "w");
+    const auto h = (w ^ 3) + 2 * w + 1;
+
+    print_polynomial_factorization(equal_degree_factorization(h, 1));
+
+    const auto root = find_root(h);
+    std::cout << root << std::endl;
   });
 }

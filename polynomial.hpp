@@ -116,7 +116,9 @@ public:
   }
 
   inline Polynomial monic() const {
-    return *this == zero_poly() ? *this : (*this / coeffs.back());
+    if (*this == zero_poly())
+      return *this;
+    return *this / coeffs.back();
   }
 
   Polynomial operator-() const {
@@ -243,6 +245,8 @@ public:
   }
 
   friend Polynomial operator/(const Polynomial &p, const element_t k) {
+    if (k == p.zero)
+      throw math_error("Division by zero");
     return p * k.inv();
   }
 
@@ -276,6 +280,8 @@ public:
     return result;
   }
 
+  // Source:
+  // https://en.wikipedia.org/wiki/Extended_Euclidean_algorithm#Simple_algebraic_field_extensions
   friend Polynomial inv_mod(const Polynomial &f, const Polynomial &mod) {
     if (f.field != mod.field)
       throw math_error() << "Cannot compute modular inverses for polynomials "
@@ -286,13 +292,26 @@ public:
                          << f.variable << "' and '" << mod.variable << "'";
 
     const Polynomial zero = f.zero_poly(), one = f.one_poly();
-    Polynomial r0 = mod, r1 = f, s0 = one, s1 = zero, t0 = zero, t1 = one;
+    Polynomial t0 = zero, t1 = one, r0 = mod, r1 = f;
+
     while (r1 != zero) {
       const auto &[q, r2] = divmod(r0, r1);
-      std::tie(r0, s0, t0, r1, s1, t1) =
-          std::make_tuple(r1, s1, t1, r2, s0 - s1 * q, t0 - t1 * q);
+      std::tie(r0, r1) = std::make_pair(r1, r2);
+      std::tie(t0, t1) = std::make_pair(t1, t0 - q * t1);
     }
-    return (t0 + mod) % mod;
+
+    if (r0.degree() > 0)
+      throw math_error()
+          << "Could not compute inverse: f and mod share a common factor "
+          << r0;
+
+    const Polynomial result = (r0.coeffs[0].inv() * t0) % mod;
+    if ((result * f) % mod != f.one_poly())
+      throw math_error() << "Assertion error: inv_mod did not compute inverse: "
+                            "the inverse of f = "
+                         << f << " mod " << mod << " was computed as " << t0
+                         << " but (t0 * f) % mod = " << (result * f) % mod;
+    return result;
   }
 
   friend std::pair<Polynomial, Polynomial> divmod(const Polynomial &p,
@@ -381,6 +400,27 @@ public:
     return os;
   }
 
+  std::string to_debug_string() const {
+    std::stringstream ss;
+    ss << "{" << std::endl;
+    ss << "  field: " << field << std::endl;
+    ss << "  variable: '" << variable << "'" << std::endl;
+    ss << "  coeffs: [";
+    for (size_t i = 0; i < coeffs.size(); ++i) {
+      ss << (i > 0 ? ", " : "");
+      ss << coeffs[i];
+    }
+    ss << "  ]" << std::endl;
+    ss << "  support: [";
+    for (size_t i = 0; i < support.size(); ++i) {
+      ss << (i > 0 ? ", " : "");
+      ss << support[i];
+    }
+    ss << "  ]" << std::endl;
+    ss << "}" << std::endl;
+    return ss.str();
+  }
+
   friend Polynomial polynomial_gcd(const Polynomial &f, const Polynomial &g) {
     if (f.field != g.field)
       throw math_error()
@@ -390,16 +430,15 @@ public:
           << "Cannot compute gcd of polynomials with two different variables '"
           << f.variable << "' and '" << g.variable << "'";
 
-    Polynomial a = f, b = g;
-    const Polynomial zero_poly(f.field, f.variable,
-                               {f.field.element(f.field.zero())});
+    Polynomial a = f.monic(), b = g.monic();
+    const Polynomial zero = f.zero_poly();
     while (true) {
-      if (b == zero_poly)
-        return a.monic();
-      a = a % b;
-      if (a == zero_poly)
-        return b.monic();
-      b = b % a;
+      if (b == zero)
+        return a;
+      a = (a % b).monic();
+      if (a == zero)
+        return b;
+      b = (b % a).monic();
     }
   }
 
@@ -426,7 +465,8 @@ public:
       if (g != f.one_poly())
         return false;
     }
-    return (pow_mod(x, gmp::pow(q, n), f) - x) % f == f.zero_poly();
+    const Polynomial h = (pow_mod(x, gmp::pow(q, n), f) - x) % f;
+    return h == f.zero_poly();
   }
 
   // More efficient than computing the order and comparing to q - 1
