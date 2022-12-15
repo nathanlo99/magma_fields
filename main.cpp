@@ -25,26 +25,26 @@ inline void init_all() {
 int main(int argc, char *argv[]) {
   init_all();
 
-  // timeit("Prime field of size near 2^16", []() {
-  //   const auto F = SmallPrimeField(65521);
-  //   const auto a = F(20000), b = F(30000);
-  //   std::cout << "In " << F << ", " << std::endl;
-  //   std::cout << a << " * " << b << " = " << a * b << std::endl;
-  // });
+  notimeit("Prime field of size near 2^16", []() {
+    const auto F = SmallPrimeField(65521);
+    const auto a = F(20000), b = F(30000);
+    std::cout << "In " << F << ", " << std::endl;
+    std::cout << a << " * " << b << " = " << a * b << std::endl;
+  });
 
-  // timeit("Prime field of medium size", []() {
-  //   const auto F = MediumPrimeField(100003);
-  //   const auto a = F(20000), b = F(30000);
-  //   std::cout << "In " << F << ", " << std::endl;
-  //   std::cout << a << " * " << b << " = " << a * b << std::endl;
-  // });
+  notimeit("Prime field of medium size", []() {
+    const auto F = MediumPrimeField(100003);
+    const auto a = F(20000), b = F(30000);
+    std::cout << "In " << F << ", " << std::endl;
+    std::cout << a << " * " << b << " = " << a * b << std::endl;
+  });
 
-  // timeit("Prime field of size over 2^32", []() {
-  //   const auto F = LargePrimeField(4294967311);
-  //   const auto a = F(20000), b = F(30000);
-  //   std::cout << "In " << F << ", " << std::endl;
-  //   std::cout << a << " * " << b << " = " << a * b << std::endl;
-  // });
+  notimeit("Prime field of size over 2^32", []() {
+    const auto F = LargePrimeField(4294967311);
+    const auto a = F(20000), b = F(30000);
+    std::cout << "In " << F << ", " << std::endl;
+    std::cout << a << " * " << b << " = " << a * b << std::endl;
+  });
 
   timeit("Field of cardinality 3^3", []() {
     const auto F3 = SmallPrimeField(3);
@@ -71,8 +71,7 @@ int main(int argc, char *argv[]) {
     }
   });
 
-  // Untested
-  timeit("Field of cardinality 2^32", []() {
+  notimeit("Field of cardinality 2^32", []() {
     const auto F2 = SmallPrimeField(2);
     const auto x = Polynomial(F2, "x");
     const auto f = (x ^ 16) + (x ^ 12) + (x ^ 3) + x + 1;
@@ -87,39 +86,30 @@ int main(int argc, char *argv[]) {
     const auto zg = F2_32.primitive_element();
   });
 
-  // timeit("Factoring",
-  //        []() { print_factorization(factor_pk_minus_one(2, 127)); });
-
-  // timeit("Order-finding", []() {
-  //   const auto F = MediumPrimeField(1000000007);
-  //   std::cout << "Primitive element in " << F << " is " <<
-  //   F.primitive_element() << std::endl;
-  // });
-
-  timeit("Debug demo", []() {
+  notimeit("Debug demo", []() {
     FiniteField(5, 4);   // Zech
     FiniteField(3, 24);  // Two-step: ZechPoly over a Zech
     FiniteField(2, 8);   // ZechField
     FiniteField(2, 103); // PrimePolyField
     FiniteField(2, 120); // ZechPoly over a ZechField of degree 20
-    FiniteField(2, 1);
-    FiniteField(2, 53);
-    FiniteField(2, 530);
-    FiniteField(2, 128);
+    FiniteField(2, 1);   // Repeating the prime field
+    FiniteField(2, 53);  // PrimePolyField
+    FiniteField(2, 530); // Example from source
+    FiniteField(2, 128); //
     print_lattices(std::cout);
   });
 
-  // timeit("Polynomial gcd's", []() {
-  //   const auto F = SmallPrimeField(127);
-  //   const auto x = Polynomial(F, "x");
-  //   const auto f = (x ^ 2) + 7 * x + 6;
-  //   std::cout << f << std::endl;
-  //   const auto g = (x ^ 2) - 5 * x - 6;
-  //   std::cout << g << std::endl;
-  //   const auto gcd = polynomial_gcd(f, g);
-  //   std::cout << "The gcd of " << f << " and " << g << " is " << gcd
-  //             << std::endl;
-  // });
+  notimeit("Polynomial gcd's", []() {
+    const auto F = SmallPrimeField(127);
+    const auto x = Polynomial(F, "x");
+    const auto f = (x ^ 2) + 7 * x + 6;
+    std::cout << f << std::endl;
+    const auto g = (x ^ 2) - 5 * x - 6;
+    std::cout << g << std::endl;
+    const auto gcd = polynomial_gcd(f, g);
+    std::cout << "The gcd of " << f << " and " << g << " is " << gcd
+              << std::endl;
+  });
 
   timeit("Odd characteristic polynomial factorization", []() {
     const auto P = SmallPrimeField(3);
@@ -146,8 +136,7 @@ int main(int argc, char *argv[]) {
     std::cout << "Root of " << f << ": " << r << std::endl;
   });
 
-  /*
-  timeit("Root-finding fuzz test", []() {
+  notimeit("Root-finding fuzz test", []() {
     const std::array<integer_t, 2> primes = {2, 3};
     for (const integer_t &prime : primes) {
       const auto P = SmallPrimeField(prime);
@@ -176,5 +165,24 @@ int main(int argc, char *argv[]) {
       }
     }
   });
-  */
+
+  timeit("Embedding workspace", []() {
+    const auto P = SmallPrimeField(2);
+    const auto x = Polynomial(P, "x");
+    const auto f = (x ^ 2) + x + 1;
+    const auto E = ZechField(P, f);
+
+    const auto w = Polynomial(P, "w");
+    const auto F = ZechField(P, (w ^ 4) + w + 1);
+    std::cout << P << std::endl;
+    std::cout << E << std::endl;
+    std::cout << F << std::endl;
+
+    const auto alpha_E = E.generating_element();
+    const auto alpha_F = F.generating_element();
+    const auto tau = find_root(f.lift(F));
+    std::cout << "alpha_E = " << alpha_E << std::endl;
+    std::cout << "alpha_F = " << alpha_F << std::endl;
+    std::cout << "tau = " << tau << std::endl;
+  });
 }

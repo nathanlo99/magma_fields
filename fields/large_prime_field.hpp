@@ -38,9 +38,7 @@ struct LargePrimeField : Field<integer_t> {
   value_t integer(const integer_t number) const override {
     return gmp::unsigned_mod(number, p);
   }
-  uint32_t as_integer(const value_t number) const {
-    return gmp::to_uint(number);
-  }
+  integer_t as_integer(const value_t number) const { return number; }
   element_t operator()(const integer_t num) const {
     return element_t(*this, integer(num));
   }
@@ -51,7 +49,7 @@ struct LargePrimeField : Field<integer_t> {
     static value_t result = 0;
     if (result != 0)
       return element_t(*this, result);
-    for (value_t c = 1; c < p; ++c) {
+    for (value_t c = 2; c < p; ++c) {
       if (is_primitive(c)) {
         result = c;
         return element_t(*this, result);
@@ -59,6 +57,7 @@ struct LargePrimeField : Field<integer_t> {
     }
     __builtin_unreachable();
   }
+  element_t generating_element() const { return element_t(*this, 1); }
   // NOTE: This is not cryptographically secure
   element_t random_element() const {
     const integer_t random_number = random_integer_t(p);

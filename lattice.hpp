@@ -70,7 +70,26 @@ inline std::shared_ptr<AbstractField> FiniteField(const integer_t p,
   return lattices.at(p).add_field(k);
 }
 
-inline void Embed(const std::shared_ptr<AbstractField> &E,
-                  const std::shared_ptr<AbstractField> &F) {
+// There are four elements stored in an explicit field embedding:
+// 1. The map phi_{E -> F}, as a matrix relating the generators of E and F
+//    over P
+// 2. The relative generator for F over E
+// 3. The vector-space isomorphism between E^{(d)} and F
+// 4. The minimal polynomial of the relative generator
+template <class PField, class EField, class FField> struct FieldEmbedding {
+  const PField &P;
+  const EField &E;
+  const FField &F;
+  // 1. e x f matrix in P representing the map phi_{E -> F}
+  // 2. An element alpha_{F / E} of F such that E[alpha] = F
+  //
+};
+
+template <class PField, class EField, class FField>
+FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
+                                             const FField &F) {
   //
 }
+
+// inline void Embed(const std::shared_ptr<AbstractField> &E,
+//                   const std::shared_ptr<AbstractField> &F) {}

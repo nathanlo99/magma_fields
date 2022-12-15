@@ -36,7 +36,9 @@ struct SmallPrimeField : Field<uint32_t> {
   value_t integer(const integer_t number) const override {
     return gmp::to_uint(gmp::unsigned_mod(number, p));
   }
-  uint32_t as_integer(const value_t number) const { return number; }
+  integer_t as_integer(const value_t number) const {
+    return gmp::from_uint(number);
+  }
   element_t operator()(const integer_t num) const {
     return element_t(*this, integer(num));
   }
@@ -55,6 +57,7 @@ struct SmallPrimeField : Field<uint32_t> {
     }
     __builtin_unreachable();
   }
+  element_t generating_element() const { return element_t(*this, 1); }
 
   // NOTE: This is not cryptographically secure or even uniform.
   element_t random_element() const {

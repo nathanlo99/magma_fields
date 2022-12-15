@@ -36,7 +36,9 @@ struct MediumPrimeField : Field<uint64_t> {
   value_t integer(const integer_t number) const override {
     return gmp::to_uint(gmp::unsigned_mod(number, gmp::from_uint(p)));
   }
-  uint32_t as_integer(const value_t number) const { return number; }
+  integer_t as_integer(const value_t number) const {
+    return gmp::from_uint(number);
+  }
   element_t operator()(const integer_t num) const {
     return element_t(*this, integer(num));
   }
@@ -47,7 +49,7 @@ struct MediumPrimeField : Field<uint64_t> {
     static value_t result = 0;
     if (result != 0)
       return element_t(*this, result);
-    for (value_t c = 1; c < p; ++c) {
+    for (value_t c = 2; c < p; ++c) {
       if (is_primitive(c)) {
         result = c;
         return element_t(*this, result);
@@ -55,6 +57,7 @@ struct MediumPrimeField : Field<uint64_t> {
     }
     __builtin_unreachable();
   }
+  element_t generating_element() const { return element_t(*this, 1); }
   // NOTE: This is not cryptographically secure or even uniform.
   element_t random_element() const {
     return element_t(*this, random_uint64() % p);

@@ -64,8 +64,15 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
     return element_t(*this, value);
   }
   element_t primitive_element() const {
-    return element_t(*this, value_t(base_field, f.variable));
+    static value_t cache = f.zero_poly();
+    if (cache == f.zero_poly()) {
+      do {
+        cache = random_element().value;
+      } while (this->is_primitive(cache));
+    }
+    return element_t(*this, cache);
   }
+  element_t generating_element() const { return primitive_element(); }
   element_t random_element() const {
     const auto random_poly =
         random_polynomial<false, false>(base_field, f.variable, k - 1);

@@ -160,6 +160,7 @@ template <typename Field> struct FieldElement {
     return *this;
   }
 
+  integer_t as_integer() const { return field.as_integer(value); }
   element_t operator-() const { return element_t(field, field.neg(value)); }
   element_t operator+(const element_t &other) const {
     return element_t(field, field.add(value, other.value));

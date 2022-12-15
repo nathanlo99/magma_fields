@@ -121,6 +121,20 @@ public:
     return *this / coeffs.back();
   }
 
+  template <class TargetField>
+  Polynomial<TargetField> lift(const TargetField &target_field) const {
+    if (field.degree() != 1)
+      throw math_error()
+          << "Can currently only lift polynomials from the base field";
+    std::vector<typename TargetField::element_t> result_coeffs;
+    for (size_t i = 0; i < coeffs.size(); ++i) {
+      const integer_t value = coeffs[i].as_integer();
+      result_coeffs.push_back(target_field(value));
+    }
+    return Polynomial<TargetField>(target_field, variable, result_coeffs,
+                                   support);
+  }
+
   Polynomial operator-() const {
     const size_t degree_plus_one = coeffs.size();
     std::vector<element_t> result_coeffs(degree_plus_one, zero);

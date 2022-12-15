@@ -6,6 +6,7 @@
 #include "gmp.hpp"
 #include "logger.hpp"
 #include "polynomial.hpp"
+#include "polynomial_factorization.hpp"
 #include "random.hpp"
 
 #include <iostream>
@@ -16,7 +17,8 @@ uint32_t get_polynomial_index(const Polynomial<BaseField> &f) {
   const uint32_t p = gmp::to_uint(base_field.cardinality());
   uint32_t result = 0;
   for (int i = f.degree(); i >= 0; --i) {
-    result = result * p + base_field.as_integer(f.coeffs[i].value);
+    const uint32_t idx = gmp::to_uint(base_field.as_integer(f.coeffs[i].value));
+    result = result * p + idx;
   }
   return result;
 }
@@ -106,10 +108,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
 
     log() << "Creating a ZechField extension of degree " << k
           << " over base_field " << base_field << std::endl;
-    // 1. Generate a irreducible polynomial f of degree k
-    do {
-      f = random_polynomial<true, true>(base_field, variable, k);
-    } while (!f.is_irreducible_rabin());
+    f = get_irreducible_polynomial(base_field, variable, k);
     log() << "Found an irreducible polynomial of degree " << k << ": '" << f
           << "'" << std::endl;
 
@@ -149,6 +148,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
     return element_t(*this, value);
   }
   element_t primitive_element() const { return element_t(*this, 1); }
+  element_t generating_element() const { return primitive_element(); }
   // NOTE: This is not cryptographically secure or even uniform.
   element_t random_element() const {
     return element_t(*this, random_uint64() % q);

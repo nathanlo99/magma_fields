@@ -16,6 +16,11 @@ inline long long get_time_ms() {
       .count();
 }
 
+inline long long get_elapsed_ms() {
+  static long long start_time = get_time_ms();
+  return get_time_ms() - start_time;
+}
+
 template <typename Func>
 inline void timeit(const std::string_view &msg, const Func &f) {
   std::cout << "[" << msg << "] | Starting" << std::endl;
@@ -26,3 +31,6 @@ inline void timeit(const std::string_view &msg, const Func &f) {
             << " seconds" << std::endl
             << std::endl;
 }
+
+template <typename Func>
+inline void notimeit(const std::string_view &msg, const Func &f) {}
