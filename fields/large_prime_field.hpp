@@ -61,8 +61,7 @@ struct LargePrimeField : Field<integer_t> {
   }
   // NOTE: This is not cryptographically secure
   element_t random_element() const {
-    integer_t random_number;
-    mpz_urandomm(random_number.get_mpz_t(), random_state, p.get_mpz_t());
+    const integer_t random_number = random_integer_t(p);
     return element_t(*this, random_number);
   }
 
