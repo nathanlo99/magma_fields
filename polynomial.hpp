@@ -114,6 +114,9 @@ public:
   inline Polynomial one_poly() const {
     return Polynomial(field, variable, {one}, {0});
   }
+  inline Polynomial var_poly() const {
+    return Polynomial(field, variable, {zero, one}, {1});
+  }
 
   inline Polynomial monic() const {
     if (*this == zero_poly())
@@ -485,7 +488,7 @@ public:
 
   // More efficient than computing the order and comparing to q - 1
   bool is_primitive_mod(const Polynomial &f) const {
-    if (*this == zero_poly())
+    if ((f % *this) == zero_poly())
       return false;
     const integer_t p = field.characteristic(), q = field.cardinality();
     const uint64_t k = field.degree(), n = f.degree();

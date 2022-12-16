@@ -88,7 +88,7 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
 template <class PField, class EField, class FField>
 FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
                                              const FField &F) {
-  //
+  // 1. Compute the map phi_{E -> F}
 }
 
 // inline void Embed(const std::shared_ptr<AbstractField> &E,

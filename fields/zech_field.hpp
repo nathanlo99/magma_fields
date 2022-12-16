@@ -205,11 +205,14 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
     return a == b;
   }
 
-  std::string value_to_string(const value_t a) const override {
+  Polynomial<BaseField> to_polynomial(const value_t a) const {
     if (a == q - 1)
-      return "0";
-    const Polynomial<BaseField> actual = pow_mod(g, a, f);
-    return actual.to_string();
+      return f.zero_poly();
+    return pow_mod(g, a, f);
+  }
+
+  std::string value_to_string(const value_t a) const override {
+    return to_polynomial(a).to_string();
   }
 
   friend std::ostream &operator<<(std::ostream &os, const ZechField &field) {
