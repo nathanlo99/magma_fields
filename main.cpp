@@ -212,6 +212,20 @@ int main(int argc, char *argv[]) {
     }
   });
 
+  timeit("To and from vectors", []() {
+    const auto P = SmallPrimeField(5);
+    const auto F = PrimePolyField(P, "x", 8ULL);
+    std::cout << F << std::endl;
+    for (int i = 0; i < 10'000; ++i) {
+      const auto poly1 = F.random_element();
+      const auto vec1 = F.to_vector(poly1);
+      const auto poly2 = F.from_vector(vec1);
+      const auto vec2 = F.to_vector(poly2);
+      assert(poly1 == poly2);
+      assert(vec1 == vec2);
+    }
+  });
+
   timeit("Embedding workspace", []() {
     // 0. Setup
     const auto P = SmallPrimeField(2);
@@ -249,19 +263,5 @@ int main(int argc, char *argv[]) {
     std::cout << M << std::endl;
 
     // 3. Compute the vector-space isomorphism E^{(d)} -> F
-  });
-
-  timeit("To and from vectors", []() {
-    const auto P = SmallPrimeField(5);
-    const auto F = PrimePolyField(P, "x", 8ULL);
-    std::cout << F << std::endl;
-    for (int i = 0; i < 100'000; ++i) {
-      const auto poly1 = F.random_element();
-      const auto vec1 = F.to_vector(poly1);
-      const auto poly2 = F.from_vector(vec1);
-      const auto vec2 = F.to_vector(poly2);
-      assert(poly1 == poly2);
-      assert(vec1 == vec2);
-    }
   });
 }
