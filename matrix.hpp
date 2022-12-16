@@ -188,15 +188,16 @@ template <typename Field> struct Matrix {
       throw math_error("Cannot invert a non-square matrix");
     const element_t zero = field.element(field.zero()),
                     one = field.element(field.one());
+
     std::vector<std::vector<element_t>> augmented_coeffs(
         rows, std::vector<element_t>(2 * cols, zero));
     for (size_t row = 0; row < rows; ++row) {
-      for (size_t col = 0; col < cols; ++col) {
+      for (size_t col = 0; col < cols; ++col)
         augmented_coeffs[row][col] = data[row][col];
-      }
       augmented_coeffs[row][cols + row] = one;
     }
     Matrix augmented(field, rows, 2 * cols, augmented_coeffs);
+
     const size_t rank = augmented.row_reduce();
     std::cout << "Row-reduced augmented matrix: " << std::endl;
     std::cout << augmented << std::endl;
@@ -205,11 +206,10 @@ template <typename Field> struct Matrix {
           "Supplied matrix was not full-rank and thus not invertible");
     std::vector<std::vector<element_t>> result_coeffs(
         rows, std::vector<element_t>(cols, zero));
-    for (size_t row = 0; row < rows; ++row) {
-      for (size_t col = 0; col < cols; ++col) {
+    for (size_t row = 0; row < rows; ++row)
+      for (size_t col = 0; col < cols; ++col)
         result_coeffs[row][col] = augmented[row][cols + col];
-      }
-    }
+
     const auto inverse = Matrix(field, rows, cols, result_coeffs);
     assert((*this) * inverse == eye(rows));
     assert(inverse * (*this) == eye(rows));

@@ -208,7 +208,7 @@ int main(int argc, char *argv[]) {
     // Should map
   });
 
-  timeit("Matrix row-reduction", []() {
+  notimeit("Matrix row-reduction", []() {
     const auto P = SmallPrimeField(127);
 
     {
