@@ -36,6 +36,14 @@ template <typename Field> struct Matrix {
     check_invariants();
   }
 
+  Matrix eye(const size_t size) const {
+    const element_t one = field.element(field.one());
+    Matrix result(field, size, size);
+    for (size_t i = 0; i < size; ++i)
+      result[i][i] = one;
+    return result;
+  }
+
   bool is_square() const { return rows == cols; }
   void check_invariants() const {
     assert(data.size() == rows);
@@ -174,6 +182,41 @@ template <typename Field> struct Matrix {
     }
     return rows; // Full-rank!
   }
+
+  Matrix inverse() const {
+    if (rows != cols)
+      throw math_error("Cannot invert a non-square matrix");
+    const element_t zero = field.element(field.zero()),
+                    one = field.element(field.one());
+    std::vector<std::vector<element_t>> augmented_coeffs(
+        rows, std::vector<element_t>(2 * cols, zero));
+    for (size_t row = 0; row < rows; ++row) {
+      for (size_t col = 0; col < cols; ++col) {
+        augmented_coeffs[row][col] = data[row][col];
+      }
+      augmented_coeffs[row][cols + row] = one;
+    }
+    Matrix augmented(field, rows, 2 * cols, augmented_coeffs);
+    const size_t rank = augmented.row_reduce();
+    std::cout << "Row-reduced augmented matrix: " << std::endl;
+    std::cout << augmented << std::endl;
+    if (rank != rows || augmented[rows - 1][rows - 1] != one)
+      throw math_error(
+          "Supplied matrix was not full-rank and thus not invertible");
+    std::vector<std::vector<element_t>> result_coeffs(
+        rows, std::vector<element_t>(cols, zero));
+    for (size_t row = 0; row < rows; ++row) {
+      for (size_t col = 0; col < cols; ++col) {
+        result_coeffs[row][col] = augmented[row][cols + col];
+      }
+    }
+    const auto inverse = Matrix(field, rows, cols, result_coeffs);
+    assert((*this) * inverse == eye(rows));
+    assert(inverse * (*this) == eye(rows));
+    return inverse;
+  }
+
+  bool operator==(const Matrix &other) const { return data == other.data; }
 
   // Printing
   friend std::ostream &operator<<(std::ostream &os, const Matrix &m) {

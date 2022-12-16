@@ -210,13 +210,33 @@ int main(int argc, char *argv[]) {
 
   timeit("Matrix row-reduction", []() {
     const auto P = SmallPrimeField(127);
-    std::vector<std::vector<integer_t>> coeffs = {
-        {1, 2, -1, -4}, {2, 3, -1, -11}, {-2, 0, -3, 22}};
 
-    auto M = Matrix(P, 3, 4, coeffs);
-    std::cout << M << std::endl;
-    const size_t rank = M.row_reduce();
-    std::cout << M << std::endl;
-    std::cout << "Rank " << rank << std::endl;
+    {
+      std::vector<std::vector<integer_t>> coeffs = {
+          {1, 2, -1, -4}, {2, 3, -1, -11}, {-2, 0, -3, 22}};
+
+      auto M = Matrix(P, 3, 4, coeffs);
+      std::cout << M << std::endl;
+      const size_t rank = M.row_reduce();
+      std::cout << M << std::endl;
+      std::cout << "Rank " << rank << std::endl;
+    }
+
+    {
+      std::vector<std::vector<integer_t>> coeffs = {
+          {1, 2, -1}, {2, 3, -1}, {-2, 0, -3}};
+      const auto M2 = Matrix(P, 3, 3, coeffs);
+      const auto M_inv = M2.inverse();
+      std::cout << M2 << std::endl;
+      std::cout << M_inv << std::endl;
+    }
+
+    {
+      std::vector<std::vector<integer_t>> coeffs = {{1, 2}, {3, 7}};
+      const auto M = Matrix(P, 2, 2, coeffs);
+      const auto M_inv = M.inverse();
+      std::cout << M << std::endl;
+      std::cout << M_inv << std::endl;
+    }
   });
 }
