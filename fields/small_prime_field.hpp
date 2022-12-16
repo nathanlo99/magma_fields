@@ -16,8 +16,10 @@ struct SmallPrimeField : Field<uint32_t> {
   using prime_field_t = SmallPrimeField;
 
   const value_t p;
+  std::vector<value_t> inverses;
 
-  SmallPrimeField(const integer_t p) : p(gmp::to_uint(p)) {
+  SmallPrimeField(const integer_t p)
+      : p(gmp::to_uint(p)), inverses(this->p, 0) {
     if (p <= 0 || !gmp::is_prime(p))
       throw math_error() << "SmallPrimeField expects a positive prime, got "
                          << p;
@@ -25,6 +27,19 @@ struct SmallPrimeField : Field<uint32_t> {
       throw math_error()
           << "Cannot instantiate SmallPrimeField with modulus " << p
           << ", expects a number which fits in an unsigned short";
+
+    const auto compute_inverse_mod = [](const value_t a, const value_t p) {
+      int32_t r0 = p, r1 = a, s0 = 1, s1 = 0, t0 = 0, t1 = 1;
+      while (r1 != 0) {
+        const value_t q = r0 / r1, r2 = r0 % r1;
+        std::tie(r0, s0, t0, r1, s1, t1) =
+            std::make_tuple(r1, s1, t1, r2, s0 - s1 * q, t0 - t1 * q);
+      }
+      return t0 >= 0 ? t0 : t0 + p;
+    };
+    for (value_t val = 1; val < p; ++val) {
+      inverses[val] = compute_inverse_mod(val, this->p);
+    }
   }
 
   integer_t characteristic() const override { return p; }
@@ -74,13 +89,9 @@ struct SmallPrimeField : Field<uint32_t> {
   }
 
   value_t inv(const value_t a) const override {
-    int32_t r0 = p, r1 = a, s0 = 1, s1 = 0, t0 = 0, t1 = 1;
-    while (r1 != 0) {
-      const value_t q = r0 / r1, r2 = r0 % r1;
-      std::tie(r0, s0, t0, r1, s1, t1) =
-          std::make_tuple(r1, s1, t1, r2, s0 - s1 * q, t0 - t1 * q);
-    }
-    return t0 >= 0 ? t0 : t0 + p;
+    if (a == 0)
+      throw math_error("Division by zero");
+    return inverses[a];
   }
   value_t mul(const value_t a, const value_t b) const override {
     return (a * b) % p;
