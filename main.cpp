@@ -12,6 +12,7 @@
 #include "random.hpp"
 #include "small_prime_field.hpp"
 #include "timing.hpp"
+#include "vector.hpp"
 #include "zech_field.hpp"
 #include "zech_poly_field.hpp"
 
@@ -209,7 +210,7 @@ int main(int argc, char *argv[]) {
   });
 
   timeit("Matrix row-reduction", []() {
-    const auto P = SmallPrimeField(127);
+    const auto P = SmallPrimeField(2);
 
     {
       std::vector<std::vector<integer_t>> coeffs = {
@@ -237,6 +238,17 @@ int main(int argc, char *argv[]) {
       const auto M_inv = M.inverse();
       std::cout << M << std::endl;
       std::cout << M_inv << std::endl;
+    }
+
+    {
+      std::vector<std::vector<integer_t>> A_coeffs = {{1, 2}, {3, 7}};
+      const auto A = Matrix(P, 2, 2, A_coeffs);
+      std::vector<integer_t> b_coeffs = {5, 10};
+      const auto b = Vector(P, 2, b_coeffs);
+      const auto x = A.solve(b);
+      std::cout << "A = \n" << A << std::endl;
+      std::cout << "b = " << b << std::endl;
+      std::cout << "x = " << x << std::endl;
     }
   });
 }

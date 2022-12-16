@@ -3,6 +3,7 @@
 
 #include "error.hpp"
 #include "field.hpp"
+#include "vector.hpp"
 
 template <typename Field> struct Matrix {
   using element_t = typename Field::element_t;
@@ -183,6 +184,31 @@ template <typename Field> struct Matrix {
     return rows; // Full-rank!
   }
 
+  // Given b, solves Ax = b and returns x
+  Vector<Field> solve(const Vector<Field> &b) const {
+    if (b.size != rows)
+      throw math_error() << "Incompatible matrix sizes: matrix had " << rows
+                         << " rows while supplied column vector had " << b.size
+                         << " elements";
+    const element_t zero = field.element(field.zero()),
+                    one = field.element(field.one());
+    std::vector<std::vector<element_t>> augmented_coeffs(
+        rows, std::vector<element_t>(cols + 1, zero));
+    for (size_t row = 0; row < rows; ++row) {
+      for (size_t col = 0; col < cols; ++col)
+        augmented_coeffs[row][col] = data[row][col];
+      augmented_coeffs[row][cols] = b[row];
+    }
+    Matrix augmented(field, rows, cols + 1, augmented_coeffs);
+    const size_t rank = augmented.row_reduce();
+    if (rank != rows || augmented[rows - 1][rows - 1] != one)
+      throw math_error("Could not solve equation, matrix was singular");
+    Vector result(field, b.size);
+    for (size_t row = 0; row < rows; ++row)
+      result[row] = augmented[row][cols];
+    return result;
+  }
+
   Matrix inverse() const {
     if (rows != cols)
       throw math_error("Cannot invert a non-square matrix");
@@ -199,8 +225,6 @@ template <typename Field> struct Matrix {
     Matrix augmented(field, rows, 2 * cols, augmented_coeffs);
 
     const size_t rank = augmented.row_reduce();
-    std::cout << "Row-reduced augmented matrix: " << std::endl;
-    std::cout << augmented << std::endl;
     if (rank != rows || augmented[rows - 1][rows - 1] != one)
       throw math_error(
           "Supplied matrix was not full-rank and thus not invertible");
