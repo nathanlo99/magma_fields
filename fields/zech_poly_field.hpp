@@ -10,6 +10,7 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   using value_t = Polynomial<BaseField>;
   using base_element_t = FieldElement<BaseField>;
   using element_t = FieldElement<ZechPolyField>;
+  using prime_field_t = typename BaseField::prime_field_t;
 
   const BaseField &base_field;
   Polynomial<BaseField> f;

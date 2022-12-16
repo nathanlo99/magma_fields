@@ -13,6 +13,7 @@
 struct MediumPrimeField : Field<uint64_t> {
   using value_t = uint64_t;
   using element_t = FieldElement<MediumPrimeField>;
+  using prime_field_t = MediumPrimeField;
 
   const value_t p;
 

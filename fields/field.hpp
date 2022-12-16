@@ -185,6 +185,10 @@ template <typename Field> struct FieldElement {
   element_t operator*(const element_t &other) const {
     return element_t(field, field.mul(value, other.value));
   }
+  element_t &operator*=(const element_t &other) {
+    return *this = *this * other;
+  }
+
   element_t operator/(const element_t &other) const {
     return element_t(field, field.div(value, other.value));
   }

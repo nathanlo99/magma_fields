@@ -14,6 +14,7 @@
 struct LargePrimeField : Field<integer_t> {
   using value_t = integer_t;
   using element_t = FieldElement<LargePrimeField>;
+  using prime_field_t = LargePrimeField;
 
   const value_t p;
 

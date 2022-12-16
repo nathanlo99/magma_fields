@@ -24,6 +24,18 @@ template <typename Field> struct Matrix {
     check_invariants();
   }
 
+  Matrix(const Field &field, const size_t rows, const size_t cols,
+         const std::vector<std::vector<integer_t>> &input_data)
+      : field(field), rows(rows), cols(cols) {
+    for (size_t row = 0; row < rows; ++row) {
+      data.emplace_back();
+      for (size_t col = 0; col < cols; ++col) {
+        data[row].push_back(field(input_data[row][col]));
+      }
+    }
+    check_invariants();
+  }
+
   bool is_square() const { return rows == cols; }
   void check_invariants() const {
     assert(data.size() == rows);
@@ -107,7 +119,61 @@ template <typename Field> struct Matrix {
   }
   friend Matrix operator*(const element_t &k, const Matrix &m) { return m * k; }
 
-  // Inversion (for square matrices only)
+  // Row-reduces the matrix and returns the rank
+  size_t row_reduce() {
+    const element_t zero = field.element(field.zero());
+
+    // Finds the pivot row and column and swaps it to the top left, and return
+    // the pivot column
+    const auto find_pivot = [&](const size_t row, const size_t column) {
+      for (size_t col = column; col < cols; ++col) {
+        size_t pivot_row = rows;
+        for (size_t lead_row = row; lead_row < rows; ++lead_row) {
+          if (data[lead_row][col] != zero) {
+            pivot_row = lead_row;
+            break;
+          }
+        }
+        if (pivot_row != rows) {
+          std::swap(data[row], data[pivot_row]);
+          return col;
+        }
+      }
+      // Otherwise, every column past [column] is all zeroes: no more pivots
+      return cols;
+    };
+
+    const auto divide_row = [&](const size_t row, const element_t elem) {
+      assert(elem != zero);
+      const element_t inv = elem.inv();
+      for (size_t col = 0; col < cols; ++col)
+        data[row][col] *= inv;
+    };
+
+    const auto subtract_multiple_of_row = [&](const size_t other_row,
+                                              const element_t multiple,
+                                              const size_t row) {
+      if (multiple == zero)
+        return;
+      for (size_t col = 0; col < cols; ++col)
+        data[other_row][col] -= multiple * data[row][col];
+    };
+
+    size_t col = 0;
+    for (size_t row = 0; row < rows; ++row) {
+      const size_t pivot_column = find_pivot(row, col);
+      if (pivot_column == cols)
+        return row;
+      assert(data[row][pivot_column] != zero);
+      divide_row(row, data[row][pivot_column]);
+      for (size_t other_row = 0; other_row < rows; ++other_row) {
+        if (other_row != row)
+          subtract_multiple_of_row(other_row, data[other_row][pivot_column],
+                                   row);
+      }
+    }
+    return rows; // Full-rank!
+  }
 
   // Printing
   friend std::ostream &operator<<(std::ostream &os, const Matrix &m) {

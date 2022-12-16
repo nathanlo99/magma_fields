@@ -69,6 +69,7 @@ std::vector<uint32_t> compute_zech_table(const uint32_t p, const uint32_t k,
 template <class BaseField> struct ZechField : Field<uint32_t> {
   using value_t = uint32_t;
   using element_t = FieldElement<ZechField>;
+  using prime_field_t = typename BaseField::prime_field_t;
 
   uint32_t p, k, q;
   const BaseField &base_field;

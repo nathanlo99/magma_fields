@@ -13,6 +13,7 @@
 struct SmallPrimeField : Field<uint32_t> {
   using value_t = uint32_t;
   using element_t = FieldElement<SmallPrimeField>;
+  using prime_field_t = SmallPrimeField;
 
   const value_t p;
 
