@@ -32,6 +32,8 @@ template <class Field> struct Vector {
   element_t &operator[](const size_t i) { return data[i]; }
   const element_t &operator[](const size_t i) const { return data[i]; }
 
+  bool operator==(const Vector &other) const { return data == other.data; }
+
   friend std::ostream &operator<<(std::ostream &os, const Vector &vec) {
     os << "[";
     for (size_t i = 0; i < vec.size; ++i) {

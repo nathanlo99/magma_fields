@@ -114,6 +114,14 @@ template <typename Field> struct Matrix {
     return result;
   }
 
+  friend Vector<Field> operator*(const Matrix &a, const Vector<Field> &v) {
+    Vector<Field> result(a.field, a.rows);
+    for (size_t row = 0; row < a.rows; ++row)
+      for (size_t col = 0; col < a.cols; ++col)
+        result[row] += a[row][col] * v[col];
+    return result;
+  }
+
   // Element multiplication
   Matrix &operator*=(const element_t &value) {
     for (size_t row = 0; row < rows; ++row)
@@ -206,6 +214,7 @@ template <typename Field> struct Matrix {
     Vector result(field, b.size);
     for (size_t row = 0; row < rows; ++row)
       result[row] = augmented[row][cols];
+    assert((*this) * result == b);
     return result;
   }
 
