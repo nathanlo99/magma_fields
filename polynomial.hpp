@@ -374,6 +374,9 @@ public:
     return a.variable == b.variable && a.support == b.support &&
            a.coeffs == b.coeffs;
   }
+  friend constexpr bool operator!=(const Polynomial &a, const Polynomial& b) {
+    return !(a == b);
+  }
 
   element_t at(const element_t &a) const {
     element_t result = zero;

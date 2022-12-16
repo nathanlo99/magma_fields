@@ -1,9 +1,9 @@
 
 #pragma once
 
-#include "gmp.h"
 #include "gmp.hpp"
 
+#include <cassert>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -28,7 +28,7 @@ inline void verify_factorization(const integer_t num,
   assert(product == num);
 }
 
-constexpr std::string_view factorization_table_filename =
+const inline std::string factorization_table_filename =
     "tables/prime_factorizations.txt";
 inline FactorizationMemo factorization_memo;
 inline void load_cached_factorizations() {

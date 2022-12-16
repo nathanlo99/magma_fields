@@ -9,7 +9,7 @@
 #include <sstream>
 #include <vector>
 
-constexpr std::string_view irreducible_polynomial_file =
+const inline std::string irreducible_polynomial_file =
     "tables/irreducible_polynomials.txt";
 
 inline std::map<std::pair<uint64_t, uint64_t>, std::vector<uint64_t>>

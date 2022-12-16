@@ -15,6 +15,7 @@ template <typename T> struct Indexed {
   Indexed() { m_id = next_id++; }
 
   bool operator==(const Indexed<T> &other) const { return m_id == other.m_id; }
+   bool operator!=(const Indexed<T> &other) const { return !(*this == other); }
 };
 
 enum class FieldType {
@@ -198,6 +199,9 @@ template <typename Field> struct FieldElement {
 
   bool operator==(const element_t &other) const {
     return field.eq(value, other.value);
+  }
+  bool operator!=(const element_t& other) const {
+    return !(*this == other);
   }
 
   friend element_t operator*(const integer_t a, const element_t &b) {

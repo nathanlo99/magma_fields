@@ -50,4 +50,4 @@ inline integer_t unsigned_mod(const integer_t n, const integer_t p) {
   return ((n % p) + p) % p;
 }
 
-}; // namespace gmp
+} // namespace gmp
