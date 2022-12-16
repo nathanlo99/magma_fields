@@ -36,15 +36,9 @@ Lattice::add_zech_field(const std::string &variable, const uint64_t k) {
     return fields.back();
   }
 
-  case FieldType::LargePrime: {
-    const LargePrimeField &P = dynamic_cast<LargePrimeField &>(*prime_field);
-    fields.push_back(
-        std::make_shared<ZechField<LargePrimeField>>(P, variable, k));
-    return fields.back();
-  }
-
   default:
-    throw math_error() << "Prime field was not actually prime";
+    throw math_error()
+        << "Prime field too big to be base field for a ZechField";
   }
 }
 

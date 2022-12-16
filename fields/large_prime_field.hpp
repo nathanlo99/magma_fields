@@ -5,6 +5,7 @@
 #include "gmp.hpp"
 #include "logger.hpp"
 #include "random.hpp"
+#include "vector.hpp"
 
 #include <cstdint>
 #include <tuple>
@@ -15,6 +16,7 @@ struct LargePrimeField : Field<integer_t> {
   using value_t = integer_t;
   using element_t = FieldElement<LargePrimeField>;
   using prime_field_t = LargePrimeField;
+  using vector_t = Vector<prime_field_t>;
 
   const value_t p;
 
@@ -58,13 +60,20 @@ struct LargePrimeField : Field<integer_t> {
     }
     __builtin_unreachable();
   }
-  element_t generating_element() const { return element_t(*this, 1); }
   // NOTE: This is not cryptographically secure
   element_t random_element() const {
     const integer_t random_number = random_integer_t(p);
     return element_t(*this, random_number);
   }
 
+  // Vector space structure
+  element_t generating_element() const { return element_t(*this, 1); }
+  vector_t to_vector(const element_t elem) const {
+    return vector_t(*this, 1, {elem});
+  }
+  element_t from_vector(const vector_t vec) const { return vec[0]; }
+
+  // Field operations
   value_t neg(const value_t a) const override { return a == 0 ? a : p - a; }
   value_t add(const value_t a, const value_t b) const override {
     return (a + b) % p;

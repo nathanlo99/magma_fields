@@ -16,17 +16,19 @@ template <class Field> struct Vector {
       : field(field), size(size), data(size, field.element(field.zero())) {}
 
   Vector(const Field &field, const size_t size,
-         const std::vector<element_t> &data)
-      : field(field), size(size), data(data) {
-    assert(data.size() == size);
+         const std::vector<element_t> &input_data)
+      : field(field), size(size), data(size, field.element(field.zero())) {
+    const size_t end = std::min<size_t>(size, input_data.size());
+    for (size_t i = 0; i < end; ++i)
+      data[i] = input_data[i];
   }
 
   Vector(const Field &field, const size_t size,
          const std::vector<integer_t> &input_data)
-      : field(field), size(size) {
-    data.reserve(size);
-    for (size_t i = 0; i < size; ++i)
-      data.push_back(field(input_data[i]));
+      : field(field), size(size), data(size, field.element(field.zero())) {
+    const size_t end = std::min(size, input_data.size());
+    for (size_t i = 0; i < end; ++i)
+      data[i] = field(input_data[i]);
   }
 
   element_t &operator[](const size_t i) { return data[i]; }

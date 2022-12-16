@@ -4,6 +4,7 @@
 #include "field.hpp"
 #include "gmp.hpp"
 #include "random.hpp"
+#include "vector.hpp"
 
 #include <cstdint>
 #include <tuple>
@@ -14,6 +15,7 @@ struct SmallPrimeField : Field<uint32_t> {
   using value_t = uint32_t;
   using element_t = FieldElement<SmallPrimeField>;
   using prime_field_t = SmallPrimeField;
+  using vector_t = Vector<prime_field_t>;
 
   const value_t p;
   std::vector<value_t> inverses;
@@ -73,13 +75,19 @@ struct SmallPrimeField : Field<uint32_t> {
     }
     __builtin_unreachable();
   }
-  element_t generating_element() const { return element_t(*this, 1); }
-
   // NOTE: This is not cryptographically secure or even uniform.
   element_t random_element() const {
     return element_t(*this, random_uint64() % p);
   }
 
+  // Vector space structure
+  element_t generating_element() const { return element_t(*this, 1); }
+  vector_t to_vector(const element_t elem) const {
+    return vector_t(*this, 1, {elem});
+  }
+  element_t from_vector(const vector_t vec) const { return vec[0]; }
+
+  // Field operations
   value_t neg(const value_t a) const override { return a == 0 ? a : p - a; }
   value_t add(const value_t a, const value_t b) const override {
     return (a + b) % p;

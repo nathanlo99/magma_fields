@@ -115,6 +115,9 @@ template <typename Field> struct Matrix {
   }
 
   friend Vector<Field> operator*(const Matrix &a, const Vector<Field> &v) {
+    if (a.cols != v.size)
+      throw math_error(
+          "Cannot multiply matrix with vector: incompatible sizes");
     Vector<Field> result(a.field, a.rows);
     for (size_t row = 0; row < a.rows; ++row)
       for (size_t col = 0; col < a.cols; ++col)

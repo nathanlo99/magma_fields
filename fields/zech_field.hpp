@@ -2,12 +2,12 @@
 #pragma once
 
 #include "field.hpp"
-#include "gmp.h"
 #include "gmp.hpp"
 #include "logger.hpp"
 #include "polynomial.hpp"
 #include "polynomial_factorization.hpp"
 #include "random.hpp"
+#include "vector.hpp"
 
 #include <iostream>
 
@@ -17,17 +17,18 @@ uint32_t get_polynomial_index(const Polynomial<BaseField> &f) {
   const uint32_t p = gmp::to_uint(base_field.cardinality());
   uint32_t result = 0;
   for (int i = f.degree(); i >= 0; --i) {
-    const uint32_t idx = gmp::to_uint(base_field.as_integer(f.coeffs[i].value));
+    const uint32_t idx = gmp::to_uint(f.coeffs[i].as_integer());
     result = result * p + idx;
   }
   return result;
 }
 
 template <class BaseField>
-std::vector<uint32_t> compute_zech_table(const uint32_t p, const uint32_t k,
-                                         const uint32_t q,
-                                         const Polynomial<BaseField> &f,
-                                         const Polynomial<BaseField> &g) {
+std::vector<uint32_t>
+compute_zech_table(const uint32_t p, const uint32_t k, const uint32_t q,
+                   const Polynomial<BaseField> &f,
+                   const Polynomial<BaseField> &g,
+                   std::vector<uint32_t> &constants, uint32_t &var) {
   log() << "Computing Zech table with f = " << f << " and g = " << g
         << std::endl;
   // Compute the Zech logarithm table, find s[r] such that x^s[r] = x^r + 1
@@ -38,11 +39,21 @@ std::vector<uint32_t> compute_zech_table(const uint32_t p, const uint32_t k,
   Polynomial<BaseField> pow = one;
   std::vector<uint32_t> log_x(q, q);
   std::vector<uint32_t> next_index(q, q);
+  constants = std::vector<uint32_t>(p);
+  constants[0] = q - 1;
+
   for (uint32_t exp = 0; exp + 1 < q; ++exp) {
     if (exp > 0 && pow == one)
       throw math_error() << "Given polynomial was not primitive, g^" << exp
                          << " = 1";
     const uint32_t idx = get_polynomial_index(pow);
+
+    // Cache special cases
+    if (pow == f.var_poly())
+      var = exp;
+    if (pow.degree() == 0)
+      constants[pow[0].value] = exp;
+
     next_index[exp] = get_polynomial_index(pow + one);
     log_x[idx] = exp;
     pow = (pow * g) % f;
@@ -70,11 +81,14 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   using value_t = uint32_t;
   using element_t = FieldElement<ZechField>;
   using prime_field_t = typename BaseField::prime_field_t;
+  using vector_t = Vector<prime_field_t>;
 
   uint32_t p, k, q;
   const BaseField &base_field;
   std::vector<value_t> zech_table;
+  std::vector<value_t> constants;
   Polynomial<BaseField> f, g;
+  value_t var; // The value of the polynomial 'x'
 
   ZechField(const BaseField &base_field, const Polynomial<BaseField> &f)
       : p(gmp::to_uint(base_field.characteristic())), k(f.degree()),
@@ -89,7 +103,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
     if (q > (1_mpz << 20))
       throw math_error() << "Zech field expected cardinality at most 2^20, got "
                          << p << "^" << k << " = " << q;
-    zech_table = compute_zech_table(this->p, k, q, f, g);
+    zech_table = compute_zech_table(this->p, k, q, f, g, constants, var);
   }
 
   ZechField(const BaseField &base_field, const std::string &variable,
@@ -120,7 +134,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
     log() << "Found the primitive polynomial '" << g << "'" << std::endl;
 
     // 3. Generate the Zech Table from it
-    zech_table = compute_zech_table(this->p, k, q, f, g);
+    zech_table = compute_zech_table(this->p, k, q, f, g, constants, var);
   }
 
   integer_t characteristic() const override { return p; }
@@ -149,12 +163,27 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
     return element_t(*this, value);
   }
   element_t primitive_element() const { return element_t(*this, 1); }
-  element_t generating_element() const { return primitive_element(); }
   // NOTE: This is not cryptographically secure or even uniform.
   element_t random_element() const {
     return element_t(*this, random_uint64() % q);
   }
 
+  // Vector space structure
+  element_t generating_element() const { return element_t(*this, var); }
+  vector_t to_vector(const element_t elem) const {
+    return vector_t(f.field, degree(), to_polynomial(elem.value).coeffs);
+  }
+  element_t from_vector(const vector_t vec) const {
+    const element_t x = element_t(*this, var);
+    element_t result = element_t(*this, zero());
+    for (int d = vec.size - 1; d >= 0; --d) {
+      const uint32_t coeff = vec.data[d].value;
+      result = result * x + element_t(*this, constants[coeff]);
+    }
+    return result;
+  }
+
+  // Field operations
   value_t neg(const value_t a) const override {
     if (p == 2 || a == zero())
       return a;

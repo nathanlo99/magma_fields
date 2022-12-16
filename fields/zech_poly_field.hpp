@@ -73,13 +73,17 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
     }
     return element_t(*this, cache);
   }
-  element_t generating_element() const { return primitive_element(); }
   element_t random_element() const {
     const auto random_poly =
         random_polynomial<false, false>(base_field, f.variable, k - 1);
     return element_t(*this, random_poly);
   }
 
+  // Vector space structure
+  element_t generating_element() const { return primitive_element(); }
+  // TODO: Implement to_vector and from_vector
+
+  // Field structure
   value_t neg(const value_t a) const override { return (-a) % f; }
   value_t add(const value_t a, const value_t b) const override {
     return (a + b) % f;

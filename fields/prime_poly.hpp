@@ -6,6 +6,7 @@
 #include "logger.hpp"
 #include "polynomial.hpp"
 #include "polynomial_factorization.hpp"
+#include "vector.hpp"
 
 template <class BaseField>
 struct PrimePolyField : Field<Polynomial<BaseField>> {
@@ -13,6 +14,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   using base_element_t = FieldElement<BaseField>;
   using element_t = FieldElement<PrimePolyField>;
   using prime_field_t = typename BaseField::prime_field_t;
+  using vector_t = Vector<prime_field_t>;
 
   const BaseField &base_field;
   Polynomial<BaseField> f;
@@ -23,10 +25,6 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   PrimePolyField(const BaseField &base_field, const Polynomial<BaseField> &f)
       : base_field(base_field), f(f), p(base_field.characteristic()),
         k(base_field.degree() * f.degree()), q(gmp::pow(p, k)) {
-    // if (base_field.type() != FieldType::SmallPrime)
-    //   throw math_error()
-    //       << "PrimePolyField expected SmallPrimeField as base field, got "
-    //       << field_type_to_string(base_field.type());
     if (!f.is_irreducible_rabin())
       throw math_error()
           << "PrimePolyField expected irreducible polynomial, got " << f;
@@ -37,10 +35,6 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
       : base_field(base_field), f(base_field, variable),
         p(base_field.characteristic()), k(base_field.degree() * k),
         q(gmp::pow(p, this->k)) {
-    // if (base_field.type() != FieldType::SmallPrime)
-    //   throw math_error()
-    //       << "PrimePolyField expected SmallPrimeField as base field, got "
-    //       << field_type_to_string(base_field.type());
     log() << "Looking for an irreducible polynomial with degree " << k
           << " over " << base_field << std::endl;
     f = get_irreducible_polynomial(base_field, variable, k);
@@ -54,6 +48,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   integer_t cardinality() const override { return q; }
   FieldType type() const override { return FieldType::PrimePoly; }
 
+  // Element constructors
   value_t zero() const override { return f.zero_poly(); }
   value_t one() const override { return f.one_poly(); }
   value_t integer(const integer_t number) const override {
@@ -73,17 +68,24 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   }
   element_t primitive_element() const {
     static value_t cache = f.zero_poly();
-    if (cache == f.zero_poly()) {
-      while (!is_primitive(cache)) {
-        cache = random_element();
-      }
+    while (cache == f.zero_poly() || !is_primitive(cache)) {
+      cache = random_element();
     }
     return element_t(*this, cache);
   }
+
+  // Vector space structure
   element_t generating_element() const {
-    return element_t(*this, value_t(f.field, f.variable));
+    return element_t(*this, f.var_poly());
+  }
+  vector_t to_vector(const element_t elem) const {
+    return vector_t(base_field, f.degree(), elem.value.coeffs);
+  }
+  element_t from_vector(const vector_t vec) const {
+    return element_t(*this, value_t(base_field, f.variable, vec.data));
   }
 
+  // Field operations
   value_t neg(const value_t a) const override { return (-a) % f; }
   value_t add(const value_t a, const value_t b) const override {
     return (a + b) % f;
