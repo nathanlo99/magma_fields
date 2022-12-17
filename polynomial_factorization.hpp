@@ -284,7 +284,7 @@ PolynomialFactorization<Field> factor_polynomial(const Polynomial<Field> &f) {
     result.emplace_back(leading_coefficient * f.one_poly(), 1);
   const auto square_free_factors =
       square_free_factorization(f / leading_coefficient);
-  log() << "Square-free decomposition: " << square_free_factors << std::endl;
+  // log() << "Square-free decomposition: " << square_free_factors << std::endl;
   for (const auto &factor : square_free_factors) {
     const auto distinct_degree_factors =
         distinct_degree_factorization(factor.base);

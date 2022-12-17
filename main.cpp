@@ -244,20 +244,30 @@ int main(int argc, char *argv[]) {
     const auto P = SmallPrimeField(3);
     const auto x = Polynomial(P, "x");
     const auto f = (((x ^ 11) + 2 * (x ^ 9) + 2 * (x ^ 8) + (x ^ 6) + (x ^ 5) +
-                    2 * (x ^ 3) + 2 * (x ^ 2) + 1) ^
-                   15) + 1;
+                     2 * (x ^ 3) + 2 * (x ^ 2) + 1) ^
+                    5) +
+                   1;
+    std::cout << f << std::endl;
     std::cout << factor_polynomial(f) << std::endl;
   });
 
   timeit("Polynomial factorization fuzz-test", []() {
-    for (integer_t p = 2; p < 10; gmp::next_prime(p)) {
+    // 'If it works for primes under 50, it works for all primes'
+    const size_t max_prime = 50, max_degree = 60, num_iterations = 10,
+                 degree_multiplier = max_degree / num_iterations;
+    for (integer_t p = 2; p < max_prime; gmp::next_prime(p)) {
+      const std::string lead_string = "Testing prime " + p.get_str() + "... ";
+      std::cout << lead_string << std::flush;
       const auto P = SmallPrimeField(p);
-      for (size_t i = 0; i < 1; ++i) {
-        const auto g = random_polynomial<false, false>(P, "x", 100);
-        log() << i << ": " << g << std::endl;
+      for (size_t i = 0; i < num_iterations; ++i) {
+        std::cout << "\r" << lead_string << i << "/" << num_iterations
+                  << std::flush;
+        const auto g =
+            random_polynomial<true, false>(P, "x", degree_multiplier * i + 1);
         const auto result = factor_polynomial(g);
-        log() << "Done: " << result << std::endl;
       }
+      std::cout << "\r" << lead_string << num_iterations << "/"
+                << num_iterations << std::endl;
     }
   });
 }
