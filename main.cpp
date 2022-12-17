@@ -243,9 +243,9 @@ int main(int argc, char *argv[]) {
   timeit("General polynomial factorization", []() {
     const auto P = SmallPrimeField(3);
     const auto x = Polynomial(P, "x");
-    const auto f = ((x ^ 11) + 2 * (x ^ 9) + 2 * (x ^ 8) + (x ^ 6) + (x ^ 5) +
+    const auto f = (((x ^ 11) + 2 * (x ^ 9) + 2 * (x ^ 8) + (x ^ 6) + (x ^ 5) +
                     2 * (x ^ 3) + 2 * (x ^ 2) + 1) ^
-                   15 + 1;
+                   15) + 1;
     std::cout << factor_polynomial(f) << std::endl;
   });
 

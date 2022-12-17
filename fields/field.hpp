@@ -217,6 +217,12 @@ template <typename Field> struct FieldElement {
   friend bool operator==(const element_t &a, const integer_t b) {
     return b == a;
   }
+  friend bool operator!=(const integer_t a, const element_t &b) {
+    return !b.field.eq(b.field.integer(a), b.value);
+  }
+  friend bool operator!=(const element_t &a, const integer_t b) {
+    return !(b == a);
+  }
 
   friend std::ostream &operator<<(std::ostream &os, const FieldElement &val) {
     return os << val.field.value_to_string(val.value);
