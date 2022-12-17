@@ -9,9 +9,10 @@ template <typename Field> struct Matrix {
   using element_t = typename Field::element_t;
 
   const Field &field;
-  const size_t rows, cols;
+  size_t rows, cols;
   std::vector<std::vector<element_t>> data;
 
+  Matrix(const Field &field) : field(field), rows(0), cols(0), data() {}
   Matrix(const Field &field, const size_t rows, const size_t cols)
       : field(field), rows(rows), cols(cols) {
     data = std::vector<std::vector<element_t>>(
@@ -35,6 +36,34 @@ template <typename Field> struct Matrix {
       }
     }
     check_invariants();
+  }
+
+  Matrix(const Matrix &other)
+      : field(other.field), rows(other.rows), cols(other.cols),
+        data(other.data) {}
+
+  Matrix(Matrix &&other)
+      : field(other.field), rows(other.rows), cols(other.cols),
+        data(std::move(other.data)) {}
+
+  Matrix &operator=(const Matrix &other) {
+    if (field != other.field)
+      throw math_error(
+          "Cannot assign matrix to matrix with different underlying field");
+    rows = other.rows;
+    cols = other.cols;
+    data = other.data;
+    return *this;
+  }
+
+  Matrix &operator=(Matrix &&other) {
+    if (field != other.field)
+      throw math_error(
+          "Cannot assign matrix to matrix with different underlying field");
+    rows = other.rows;
+    cols = other.cols;
+    data = std::move(other.data);
+    return *this;
   }
 
   Matrix eye(const size_t size) const {
@@ -214,6 +243,7 @@ template <typename Field> struct Matrix {
     const size_t rank = augmented.row_reduce();
     if (rank != rows || augmented[rows - 1][rows - 1] != one)
       throw math_error("Could not solve equation, matrix was singular");
+
     Vector result(field, b.size);
     for (size_t row = 0; row < rows; ++row)
       result[row] = augmented[row][cols];
