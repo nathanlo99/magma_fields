@@ -484,8 +484,8 @@ public:
   }
 
   bool is_irreducible_rabin() const {
-    if (*this == 0)
-      return false;
+    if (degree() == 0)
+      return *this != 0;
     const Polynomial f = to_monic();
     const integer_t q = f.field.cardinality();
     const uint64_t n = f.degree();
