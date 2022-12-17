@@ -159,6 +159,7 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
   }
   result.psi = N;
   std::cout << N << std::endl;
+  assert(N.rank() == f);
 
   // 5. Compute the minimal polynomial of alpha_FE over E
 

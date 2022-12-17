@@ -38,13 +38,8 @@ template <typename Field> struct Matrix {
     check_invariants();
   }
 
-  Matrix(const Matrix &other)
-      : field(other.field), rows(other.rows), cols(other.cols),
-        data(other.data) {}
-
-  Matrix(Matrix &&other)
-      : field(other.field), rows(other.rows), cols(other.cols),
-        data(std::move(other.data)) {}
+  Matrix(const Matrix &other) = default;
+  Matrix(Matrix &&other) = default;
 
   Matrix &operator=(const Matrix &other) {
     if (field != other.field)
@@ -224,6 +219,11 @@ template <typename Field> struct Matrix {
     return rows; // Full-rank!
   }
 
+  size_t rank() const {
+    Matrix tmp = *this;
+    return tmp.row_reduce();
+  }
+
   // Given b, solves Ax = b and returns x
   Vector<Field> solve(const Vector<Field> &b) const {
     if (b.size != rows)
@@ -283,6 +283,7 @@ template <typename Field> struct Matrix {
   }
 
   bool operator==(const Matrix &other) const { return data == other.data; }
+  bool operator!=(const Matrix &other) const { return !(*this == other); }
 
   // Printing
   friend std::ostream &operator<<(std::ostream &os, const Matrix &m) {

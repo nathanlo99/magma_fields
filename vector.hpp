@@ -31,10 +31,23 @@ template <class Field> struct Vector {
       data[i] = field(input_data[i]);
   }
 
+  Vector(const Vector &other) = default;
+  Vector(Vector &&other) = default;
+
+  Vector &operator=(const Vector &other) {
+    size = other.size;
+    data = other.data;
+  }
+  Vector &operator=(Vector &&other) {
+    size = other.size;
+    data = std::move(other.data);
+  }
+
   element_t &operator[](const size_t i) { return data[i]; }
   const element_t &operator[](const size_t i) const { return data[i]; }
 
   bool operator==(const Vector &other) const { return data == other.data; }
+  bool operator!=(const Vector &other) const { return !(*this == other); }
 
   friend std::ostream &operator<<(std::ostream &os, const Vector &vec) {
     os << "[";

@@ -6,6 +6,7 @@
 #include "gmp.hpp"
 #include "polynomial.hpp"
 #include "small_prime_field.hpp"
+#include <cstddef>
 #include <sstream>
 #include <vector>
 
@@ -90,20 +91,123 @@ template <class Field> struct PolynomialFactor {
       : base(base), exp(exp) {}
 };
 
-template <class Field>
-inline void verify_polynomial_factorization(
-    const Polynomial<Field> &f,
-    const std::vector<PolynomialFactor<Field>> &factorization) {
-  Polynomial<Field> product = f.one_poly();
-  for (const auto &factor : factorization) {
-    assert(factor.base.is_irreducible_rabin());
-    product *= factor.base ^ factor.exp;
+template <class Field> struct PolynomialFactorization {
+  std::vector<PolynomialFactor<Field>> factors;
+
+  PolynomialFactorization() = default;
+  explicit PolynomialFactorization(const Polynomial<Field> &f)
+      : factors(1, PolynomialFactor<Field>(f, 1)) {}
+
+  void combine(const PolynomialFactorization &other) {
+    // TODO: Combine like terms
+    factors.insert(factors.end(), other.factors.begin(), other.factors.end());
   }
-  assert(product == f);
+
+  PolynomialFactorization pow(const size_t exp) const {
+    PolynomialFactorization result;
+    for (const auto &factor : factors)
+      result.factors.emplace_back(factor.base, factor.exp * exp);
+    return result;
+  }
+
+  void emplace_back(const Polynomial<Field> &base, const uint64_t exp) {
+    factors.emplace_back(base, exp);
+  }
+
+  Polynomial<Field> product() const {
+    assert(!factors.empty());
+    Polynomial<Field> product = factors[0].base.one_poly();
+    for (const auto &factor : factors)
+      product *= factor.base ^ factor.exp;
+    return product;
+  }
+
+  bool all_irreducible() const {
+    for (const auto &factor : factors)
+      if (!factor.base.is_irreducible_rabin())
+        return false;
+    return true;
+  }
+
+  void verify(const Polynomial<Field> &f) { assert(product() == f); }
+
+  auto begin() const { return factors.begin(); }
+  auto end() const { return factors.end(); }
+
+  friend std::ostream &
+  operator<<(std::ostream &os,
+             const PolynomialFactorization<Field> &factorization) {
+    for (const auto &factor : factorization) {
+      os << "(" << factor.base << ")";
+      if (factor.exp != 1)
+        os << "^" << factor.exp << " ";
+    }
+    return os;
+  }
+};
+
+template <class Field>
+PolynomialFactorization<Field>
+square_free_factorization(const Polynomial<Field> &f) {
+  const integer_t p = f.field.characteristic();
+  const uint64_t p_uint = gmp::to_uint(p);
+  PolynomialFactorization<Field> result;
+
+  Polynomial<Field> c = polynomial_gcd(f, f.derivative()), w = f / c;
+
+  for (size_t i = 1; w != 1; ++i) {
+    const Polynomial<Field> y = polynomial_gcd(w, c);
+    const Polynomial<Field> factor = w / y;
+    if (factor != 1)
+      result.emplace_back(factor, i);
+    w = y;
+    c /= y;
+  }
+
+  if (c != 1) {
+    assert(c.degree() % p_uint == 0);
+    const size_t new_degree = c.degree() / p_uint;
+    std::vector<typename Field::element_t> new_coeffs(
+        new_degree + 1, f.field.element(f.field.zero()));
+    for (const size_t d : c.support) {
+      assert(d % p_uint == 0);
+      new_coeffs[d / p_uint] = c.coeffs[d];
+    }
+    const Polynomial new_c = Polynomial(c.field, c.variable, new_coeffs);
+    const auto factorization = square_free_factorization(new_c);
+    result.combine(factorization.pow(p_uint));
+  }
+  result.verify(f);
+  return result;
 }
 
 template <class Field>
-std::vector<PolynomialFactor<Field>>
+std::vector<std::pair<Polynomial<Field>, size_t>>
+distinct_degree_factorization(const Polynomial<Field> &f) {
+  // TODO: Check that f is square-free
+  std::vector<std::pair<Polynomial<Field>, size_t>> result;
+  const integer_t q = f.field.cardinality();
+  const Polynomial<Field> x = f.var_poly();
+  size_t i = 1;
+  Polynomial<Field> f1 = f;
+  while (f1.degree() >= 2 * i) {
+    const Polynomial<Field> g =
+        polynomial_gcd(f1, pow_mod(x, gmp::pow(q, i), f) - x);
+    if (g != 1) {
+      result.emplace_back(g, i);
+      f1 /= g;
+    }
+    ++i;
+  }
+  if (f1 != 1)
+    result.emplace_back(f1, f1.degree());
+  if (result.empty())
+    return {std::make_pair(f, 1)};
+  return result;
+}
+
+template <class Field>
+PolynomialFactorization<Field>
 equal_degree_factorization(const Polynomial<Field> &f, const uint64_t d) {
   if (f.degree() % d != 0)
     throw math_error() << "Expected f (" << f
@@ -112,8 +216,9 @@ equal_degree_factorization(const Polynomial<Field> &f, const uint64_t d) {
                        << f.degree() << ")";
 
   // TODO: Check that f is square-free
-  if (f.degree() == d)
-    return {PolynomialFactor(f, 1)};
+  if (f.degree() == d) {
+    return PolynomialFactorization(f);
+  }
 
   // Computes (h^1 + h^2 + h^4 + ... + h^{2^{d-1}}) % f, useful when p = 2
   const auto compute_squared_sum = [](const Polynomial<Field> &h,
@@ -162,10 +267,34 @@ equal_degree_factorization(const Polynomial<Field> &f, const uint64_t d) {
     factors = new_factors;
   }
 
-  std::vector<PolynomialFactor<Field>> result;
+  PolynomialFactorization<Field> result;
   for (const auto &factor : factors)
     result.emplace_back(factor, 1);
-  verify_polynomial_factorization(f, result);
+  assert(result.all_irreducible());
+  result.verify(f);
+  return result;
+}
+
+template <class Field>
+PolynomialFactorization<Field> factor_polynomial(const Polynomial<Field> &f) {
+  assert(f != 0);
+  PolynomialFactorization<Field> result;
+  const auto leading_coefficient = f.coeffs.back();
+  if (leading_coefficient != 1)
+    result.emplace_back(leading_coefficient * f.one_poly(), 1);
+  const auto square_free_factors =
+      square_free_factorization(f / leading_coefficient);
+  log() << "Square-free decomposition: " << square_free_factors << std::endl;
+  for (const auto &factor : square_free_factors) {
+    const auto distinct_degree_factors =
+        distinct_degree_factorization(factor.base);
+    for (const auto &[g, d] : distinct_degree_factors) {
+      const auto factorization = equal_degree_factorization(g, d);
+      result.combine(factorization.pow(factor.exp));
+    }
+  }
+  assert(result.all_irreducible());
+  result.verify(f);
   return result;
 }
 
@@ -203,15 +332,4 @@ inline typename Field::element_t find_root(const Polynomial<Field> &f) {
     factors = new_factors;
   }
   __builtin_unreachable();
-}
-
-template <class Field>
-inline void print_polynomial_factorization(
-    const std::vector<PolynomialFactor<Field>> &factorization) {
-  for (const auto &factor : factorization) {
-    std::cout << "(" << factor.base << ")";
-    if (factor.exp != 1)
-      std::cout << "^" << factor.exp << " ";
-  }
-  std::cout << std::endl;
 }

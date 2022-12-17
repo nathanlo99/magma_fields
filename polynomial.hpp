@@ -118,10 +118,20 @@ public:
     return Polynomial(field, variable, {zero, one}, {1});
   }
 
-  inline Polynomial monic() const {
-    if (*this == zero_poly())
+  bool is_monic() const { return coeffs.back() == 1; }
+  inline Polynomial to_monic() const {
+    if (*this == 0)
       return *this;
     return *this / coeffs.back();
+  }
+  inline Polynomial derivative() const {
+    if (degree() == 0)
+      return zero_poly();
+    std::vector<element_t> new_coeffs(coeffs.size() - 1, zero);
+    for (size_t i = 0; i + 1 < coeffs.size(); ++i) {
+      new_coeffs[i] = (i + 1) * coeffs[i + 1];
+    }
+    return Polynomial(field, variable, new_coeffs);
   }
 
   template <class TargetField>
@@ -323,7 +333,7 @@ public:
           << r0;
 
     const Polynomial result = (r0.coeffs[0].inv() * t0) % mod;
-    if ((result * f) % mod != f.one_poly())
+    if ((result * f) % mod != 1)
       throw math_error() << "Assertion error: inv_mod did not compute inverse: "
                             "the inverse of f = "
                          << f << " mod " << mod << " was computed as " << t0
@@ -369,13 +379,25 @@ public:
   friend Polynomial operator%(const Polynomial &p, const Polynomial &q) {
     return divmod(p, q).second;
   }
+  Polynomial &operator/=(const Polynomial &other) {
+    return *this = *this / other;
+  }
+  Polynomial &operator%=(const Polynomial &other) {
+    return *this = *this % other;
+  }
 
   friend constexpr bool operator==(const Polynomial &a, const Polynomial &b) {
     return a.variable == b.variable && a.support == b.support &&
            a.coeffs == b.coeffs;
   }
-  friend constexpr bool operator!=(const Polynomial &a, const Polynomial& b) {
+  friend constexpr bool operator!=(const Polynomial &a, const Polynomial &b) {
     return !(a == b);
+  }
+  friend bool operator==(const Polynomial &a, const integer_t elem) {
+    return a.coeffs.size() == 1 && a.coeffs[0] == elem;
+  }
+  friend bool operator!=(const Polynomial &a, const integer_t elem) {
+    return !(a == elem);
   }
 
   element_t at(const element_t &a) const {
@@ -450,22 +472,21 @@ public:
           << "Cannot compute gcd of polynomials with two different variables '"
           << f.variable << "' and '" << g.variable << "'";
 
-    Polynomial a = f.monic(), b = g.monic();
-    const Polynomial zero = f.zero_poly();
+    Polynomial a = f.to_monic(), b = g.to_monic();
     while (true) {
-      if (b == zero)
+      if (b == 0)
         return a;
-      a = (a % b).monic();
-      if (a == zero)
+      a = (a % b).to_monic();
+      if (a == 0)
         return b;
-      b = (b % a).monic();
+      b = (b % a).to_monic();
     }
   }
 
   bool is_irreducible_rabin() const {
-    if (*this == zero_poly())
+    if (*this == 0)
       return false;
-    const Polynomial f = monic();
+    const Polynomial f = to_monic();
     const integer_t q = f.field.cardinality();
     const uint64_t n = f.degree();
 
@@ -482,23 +503,23 @@ public:
       const uint64_t pi = gmp::to_uint(factor.base), ni = n / pi;
       const Polynomial h = (pow_mod(x, gmp::pow(q, ni), f) - x) % f;
       const Polynomial g = polynomial_gcd(f, h);
-      if (g != f.one_poly())
+      if (g != 1)
         return false;
     }
     const Polynomial h = (pow_mod(x, gmp::pow(q, n), f) - x) % f;
-    return h == f.zero_poly();
+    return h == 0;
   }
 
   // More efficient than computing the order and comparing to q - 1
   bool is_primitive_mod(const Polynomial &f) const {
-    if ((f % *this) == zero_poly())
+    if (f % *this == 0)
       return false;
     const integer_t p = field.characteristic(), q = field.cardinality();
     const uint64_t k = field.degree(), n = f.degree();
     const integer_t full_order = gmp::pow(p, k * n) - 1;
     const Factorization factorization = factor_pk_minus_one(p, k * n);
     for (const Factor &factor : factorization) {
-      if (pow_mod(*this, full_order / factor.base, f) == one_poly())
+      if (pow_mod(*this, full_order / factor.base, f) == 1)
         return false;
     }
     return true;

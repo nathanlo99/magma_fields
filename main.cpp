@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
     const auto w = Polynomial(F, "w");
     const auto f = (w ^ 2) + w + 2;
 
-    print_polynomial_factorization(equal_degree_factorization(f, 1));
+    std::cout << equal_degree_factorization(f, 1) << std::endl;
   });
 
   timeit("p = 2 polynomial factorization", []() {
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
     const auto w = Polynomial(F, "w");
     const auto f = (w ^ 2) + w + 1;
 
-    print_polynomial_factorization(equal_degree_factorization(f, 1));
+    std::cout << equal_degree_factorization(f, 1) << std::endl;
 
     const auto r = find_root(f);
     std::cout << "Root of " << f << ": " << r << std::endl;
@@ -238,5 +238,26 @@ int main(int argc, char *argv[]) {
     std::cout << F << std::endl;
 
     const auto embedding = Embed(P, E, F);
+  });
+
+  timeit("General polynomial factorization", []() {
+    const auto P = SmallPrimeField(3);
+    const auto x = Polynomial(P, "x");
+    const auto f = ((x ^ 11) + 2 * (x ^ 9) + 2 * (x ^ 8) + (x ^ 6) + (x ^ 5) +
+                    2 * (x ^ 3) + 2 * (x ^ 2) + 1) ^
+                   15 + 1;
+    std::cout << factor_polynomial(f) << std::endl;
+  });
+
+  timeit("Polynomial factorization fuzz-test", []() {
+    for (integer_t p = 2; p < 10; gmp::next_prime(p)) {
+      const auto P = SmallPrimeField(p);
+      for (size_t i = 0; i < 1; ++i) {
+        const auto g = random_polynomial<false, false>(P, "x", 100);
+        log() << i << ": " << g << std::endl;
+        const auto result = factor_polynomial(g);
+        log() << "Done: " << result << std::endl;
+      }
+    }
   });
 }
