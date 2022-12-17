@@ -16,6 +16,7 @@ struct LargePrimeField : Field<integer_t> {
   using value_t = integer_t;
   using element_t = FieldElement<LargePrimeField>;
   using prime_field_t = LargePrimeField;
+  using ground_field_t = LargePrimeField;
   using vector_t = Vector<prime_field_t>;
 
   const value_t p;
@@ -35,7 +36,10 @@ struct LargePrimeField : Field<integer_t> {
   uint32_t degree() const override { return 1; }
   integer_t cardinality() const override { return p; }
   FieldType type() const override { return FieldType::LargePrime; }
+  const prime_field_t &prime_field() const { return *this; }
+  const ground_field_t &ground_field() const { return *this; }
 
+  // Element constructors
   value_t zero() const override { return 0; }
   value_t one() const override { return 1; }
   value_t integer(const integer_t number) const override {

@@ -14,6 +14,7 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   using base_element_t = FieldElement<BaseField>;
   using element_t = FieldElement<PrimePolyField>;
   using prime_field_t = typename BaseField::prime_field_t;
+  using ground_field_t = BaseField;
   using vector_t = Vector<prime_field_t>;
 
   const BaseField &base_field;
@@ -47,6 +48,8 @@ struct PrimePolyField : Field<Polynomial<BaseField>> {
   uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
   FieldType type() const override { return FieldType::PrimePoly; }
+  const prime_field_t &prime_field() const { return base_field; }
+  const ground_field_t &ground_field() const { return base_field; }
 
   // Element constructors
   value_t zero() const override { return f.zero_poly(); }

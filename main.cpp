@@ -239,6 +239,7 @@ int main(int argc, char *argv[]) {
 
     const auto e = E.degree(), f = F.degree();
     assert(f % e == 0);
+    const auto d = f / e;
 
     // 1. Computing prime-field generators
     const auto alpha_E = E.generating_element();
@@ -262,6 +263,25 @@ int main(int argc, char *argv[]) {
     }
     std::cout << M << std::endl;
 
+    // 3. Finding a generator for F/E
+    // If G is contained in E and we already have a generator for F over
+    // G, then use that
+    // TODO: Implement the above more generally once we have embeddings
+    // For now, we just restrict ourselves to fields F with G = P
+    const auto alpha_FE = F.generating_element();
+
     // 3. Compute the vector-space isomorphism E^{(d)} -> F
+    Matrix N(P, f, f);
+    for (size_t i = 0; i < d; ++i) {
+      for (size_t j = 0; j < e; ++j) {
+        // Compute \phi_F^{-1}(alpha_FE^i * tau^j)
+        const auto alpha_FE_to_i = alpha_FE ^ i;
+        const auto tau_to_j = tau ^ j;
+        const auto product = alpha_FE_to_i * tau_to_j;
+        const auto row = F.to_vector(product);
+        N[i * e + j] = row.data;
+      }
+    }
+    std::cout << N << std::endl;
   });
 }

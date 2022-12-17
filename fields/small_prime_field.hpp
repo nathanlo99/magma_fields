@@ -15,6 +15,7 @@ struct SmallPrimeField : Field<uint32_t> {
   using value_t = uint32_t;
   using element_t = FieldElement<SmallPrimeField>;
   using prime_field_t = SmallPrimeField;
+  using ground_field_t = SmallPrimeField;
   using vector_t = Vector<prime_field_t>;
 
   const value_t p;
@@ -48,6 +49,8 @@ struct SmallPrimeField : Field<uint32_t> {
   uint32_t degree() const override { return 1; }
   integer_t cardinality() const override { return p; }
   FieldType type() const override { return FieldType::SmallPrime; }
+  const prime_field_t &prime_field() const { return *this; }
+  const ground_field_t &ground_field() const { return *this; }
 
   value_t zero() const override { return 0; }
   value_t one() const override { return 1; }

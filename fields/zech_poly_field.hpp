@@ -11,6 +11,8 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   using base_element_t = FieldElement<BaseField>;
   using element_t = FieldElement<ZechPolyField>;
   using prime_field_t = typename BaseField::prime_field_t;
+  using ground_field_t = BaseField;
+  using vector_t = Vector<prime_field_t>;
 
   const BaseField &base_field;
   Polynomial<BaseField> f;
@@ -51,7 +53,10 @@ template <class BaseField> struct ZechPolyField : Field<Polynomial<BaseField>> {
   uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
   FieldType type() const override { return FieldType::ZechPoly; }
+  const prime_field_t &prime_field() const { return base_field.prime_field(); }
+  const ground_field_t &ground_field() const { return base_field; }
 
+  // Element constructors
   value_t zero() const override { return f.zero_poly(); }
   value_t one() const override { return f.one_poly(); }
   value_t integer(const integer_t number) const override {

@@ -15,6 +15,7 @@ struct MediumPrimeField : Field<uint64_t> {
   using value_t = uint64_t;
   using element_t = FieldElement<MediumPrimeField>;
   using prime_field_t = MediumPrimeField;
+  using ground_field_t = MediumPrimeField;
   using vector_t = Vector<prime_field_t>;
 
   const value_t p;
@@ -33,7 +34,10 @@ struct MediumPrimeField : Field<uint64_t> {
   uint32_t degree() const override { return 1; }
   integer_t cardinality() const override { return gmp::from_uint(p); }
   FieldType type() const override { return FieldType::MediumPrime; }
+  const prime_field_t &prime_field() const { return *this; }
+  const ground_field_t &ground_field() const { return *this; }
 
+  // Element constructors
   value_t zero() const override { return 0; }
   value_t one() const override { return 1; }
   value_t integer(const integer_t number) const override {

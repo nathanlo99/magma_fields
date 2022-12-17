@@ -81,6 +81,7 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   using value_t = uint32_t;
   using element_t = FieldElement<ZechField>;
   using prime_field_t = typename BaseField::prime_field_t;
+  using ground_field_t = BaseField;
   using vector_t = Vector<prime_field_t>;
 
   uint32_t p, k, q;
@@ -141,7 +142,10 @@ template <class BaseField> struct ZechField : Field<uint32_t> {
   uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
   FieldType type() const override { return FieldType::Zech; }
+  const prime_field_t &prime_field() const { return base_field; }
+  const ground_field_t &ground_field() const { return base_field; }
 
+  // Element constructors
   value_t zero() const override { return q - 1; }
   value_t one() const override { return 0; }
   value_t integer(const integer_t number) const override {
