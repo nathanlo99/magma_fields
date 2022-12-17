@@ -308,6 +308,7 @@ template <typename Field> struct Matrix {
 
   // Printing
   friend std::ostream &operator<<(std::ostream &os, const Matrix &m) {
+    os << "\n";
     const size_t width = m.field.characteristic().get_str().size();
     for (size_t i = 0; i < m.rows; ++i) {
       os << (i > 0 ? "  " : "[ ");

@@ -98,7 +98,7 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
   // 2. An element alpha_{F / E} of F such that E[alpha] = F
   f_field_element_t alpha_FE;
   // 3. A vector space isomorphism N encoding the transformation E^{(d)} -> F
-  Matrix<PField> psi;
+  Matrix<PField> psi, psi_inverse;
   // 4. The minimal polynomial of alpha_{F/E} over E
   Polynomial<EField> f_FE;
 
@@ -113,7 +113,7 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
   }
 
   f_field_element_t apply_embedding(const e_field_element_t &elem) const {
-    return F.from_vector(phi.transpose() * E.to_vector(elem));
+    return F.from_vector(phi * E.to_vector(elem));
   }
 
   f_field_element_t from_E_vector(const Vector<e_field_t> &vec) const {
@@ -139,7 +139,7 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
     const auto out_vector = F.to_vector(elem);
 
     // 2. Apply the inverse of psi
-    const auto in_vector = psi.inverse() * out_vector;
+    const auto in_vector = psi_inverse * out_vector;
 
     // 3. Apply (\psi_E)^{(d)}
     std::vector<e_field_element_t> result_coeffs;
@@ -205,8 +205,8 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
     for (size_t j = 0; j < f; ++j)
       M[i][j] = tau_i[j];
   }
-  result.phi = M;
-  log() << "\n" << M << std::endl;
+  result.phi = M.transpose();
+  log() << M << std::endl;
 
   // 3. Finding a generator for F/E
   // If G is contained in E and we already have a generator for F over
@@ -228,8 +228,10 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
       N[i * e + j] = row.data;
     }
   }
-  result.psi = N;
-  log() << "\n" << N << std::endl;
+  result.psi = N.transpose();
+  result.psi_inverse = result.psi.inverse();
+
+  log() << N << std::endl;
   assert(N.rank() == f);
 
   // 5. Compute the minimal polynomial of alpha_FE over E
