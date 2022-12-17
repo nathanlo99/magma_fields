@@ -81,6 +81,25 @@ template <typename Field> struct Matrix {
     return data[i];
   }
 
+  Matrix transpose() const {
+    Matrix result(field, cols, rows);
+    for (size_t row = 0; row < rows; ++row)
+      for (size_t col = 0; col < cols; ++col)
+        result.data[col][row] = data[row][col];
+    result.check_invariants();
+    return result;
+  }
+
+  void add_row(const std::vector<element_t> &row) {
+    if (row.size() != cols)
+      throw math_error()
+          << "Cannot add row of incompatible size, width of matrix was " << cols
+          << " but got row with " << row.size() << " elements";
+    data.push_back(row);
+    ++rows;
+    check_invariants();
+  }
+
   // Addition
   Matrix &operator+=(const Matrix &other) {
     if (field != other.field)
@@ -140,8 +159,10 @@ template <typename Field> struct Matrix {
 
   friend Vector<Field> operator*(const Matrix &a, const Vector<Field> &v) {
     if (a.cols != v.size)
-      throw math_error(
-          "Cannot multiply matrix with vector: incompatible sizes");
+      throw math_error()
+          << "Cannot multiply matrix with vector: incompatible sizes ("
+          << a.rows << " x " << a.cols << ") and (" << v.size << " x " << 1
+          << ")";
     Vector<Field> result(a.field, a.rows);
     for (size_t row = 0; row < a.rows; ++row)
       for (size_t col = 0; col < a.cols; ++col)

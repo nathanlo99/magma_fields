@@ -226,21 +226,7 @@ int main(int argc, char *argv[]) {
     }
   });
 
-  timeit("Embedding workspace", []() {
-    // 0. Setup
-    const auto P = SmallPrimeField(2);
-    const auto x = Polynomial(P, "x");
-    const auto E = ZechField(P, (x ^ 2) + x + 1);
-    const auto w = Polynomial(P, "w");
-    const auto F = ZechField(P, (w ^ 4) + w + 1);
-    std::cout << P << std::endl;
-    std::cout << E << std::endl;
-    std::cout << F << std::endl;
-
-    const auto embedding = Embed(P, E, F);
-  });
-
-  timeit("General polynomial factorization", []() {
+  notimeit("General polynomial factorization", []() {
     const auto P = SmallPrimeField(3);
     const auto x = Polynomial(P, "x");
     const auto f = (((x ^ 11) + 2 * (x ^ 9) + 2 * (x ^ 8) + (x ^ 6) + (x ^ 5) +
@@ -251,7 +237,7 @@ int main(int argc, char *argv[]) {
     std::cout << factor_polynomial(f) << std::endl;
   });
 
-  timeit("Polynomial factorization fuzz-test", []() {
+  notimeit("Polynomial factorization fuzz-test", []() {
     // 'If it works for primes under 50, it works for all primes'
     const size_t max_prime = 50, max_degree = 60, num_iterations = 10,
                  degree_multiplier = max_degree / num_iterations;
@@ -269,5 +255,22 @@ int main(int argc, char *argv[]) {
       std::cout << "\r" << lead_string << num_iterations << "/"
                 << num_iterations << std::endl;
     }
+  });
+
+  timeit("Embedding workspace", []() {
+    // 0. Setup
+    const auto P = SmallPrimeField(2);
+    const auto x = Polynomial(P, "x");
+    const auto E = ZechField(P, (x ^ 2) + x + 1);
+    const auto w = Polynomial(P, "w");
+    const auto F = ZechField(P, (w ^ 4) + w + 1);
+    std::cout << P << std::endl;
+    std::cout << E << std::endl;
+    std::cout << F << std::endl;
+
+    const auto embedding = Embed(P, E, F);
+    const auto alpha_E = E.generating_element();
+    const auto tau = embedding.apply_embedding(alpha_E);
+    std::cout << tau << std::endl;
   });
 }

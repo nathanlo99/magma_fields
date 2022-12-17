@@ -91,6 +91,8 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
   const EField &E;
   const FField &F;
 
+  const size_t e, f, d;
+
   // 1. e x f matrix in P representing the map phi_{E -> F}
   Matrix<PField> phi;
   // 2. An element alpha_{F / E} of F such that E[alpha] = F
@@ -101,8 +103,81 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
   Polynomial<EField> f_FE;
 
   FieldEmbedding(const PField &P, const EField &E, const FField &F)
-      : P(P), E(E), F(F), phi(P), alpha_FE(F.element(F.zero())), psi(P),
-        f_FE(E, "x", {E.element(E.zero())}, {}) {}
+      : P(P), E(E), F(F), e(E.degree()), f(F.degree()), d(f / e), phi(P),
+        alpha_FE(F.element(F.zero())), psi(P),
+        f_FE(E, "x", {E.element(E.zero())}, {}) {
+    if (f % e != 0)
+      throw math_error() << "Could not create embedding for incompatible "
+                            "fields E and F with absolute degrees "
+                         << e << " and " << f << ", respectively";
+  }
+
+  f_field_element_t apply_embedding(const e_field_element_t &elem) const {
+    return F.from_vector(phi.transpose() * E.to_vector(elem));
+  }
+
+  f_field_element_t from_E_vector(const Vector<e_field_t> &vec) const {
+    // 1. Apply (\phi_E^{-1})^(d) to vec
+    std::vector<p_field_element_t> components;
+    components.reserve(f);
+    for (const e_field_element_t &component : vec.data) {
+      const auto p_vector = E.to_vector(component);
+      components.insert(components.end(), p_vector.data.begin(),
+                        p_vector.data.end());
+    }
+    const auto in_vector = Vector(P, f, components);
+
+    // 2. Apply the linear transformation in psi
+    const auto out_vector = psi * in_vector;
+
+    // 3. Apply phi_F
+    return F.from_vector(out_vector);
+  }
+
+  Vector<e_field_t> to_E_vector(const f_field_element_t &elem) const {
+    // 1. Apply phi_F^{-1}
+    const auto out_vector = F.to_vector(elem);
+
+    // 2. Apply the inverse of psi
+    const auto in_vector = psi.inverse() * out_vector;
+
+    // 3. Apply (\psi_E)^{(d)}
+    std::vector<e_field_element_t> result_coeffs;
+    result_coeffs.reserve(d);
+    for (size_t i = 0; i < d; ++i) {
+      std::vector<p_field_element_t> component;
+      component.reserve(e);
+      component.insert(component.end(), in_vector.data.begin() + i * e,
+                       in_vector.data.begin() + (i + 1) * e);
+      const auto E_component = E.from_vector(Vector(P, e, component));
+      result_coeffs.push_back(E_component);
+    }
+    return Vector(E, d, result_coeffs);
+  }
+
+  Polynomial<EField> compute_minimal_polynomial(const f_field_element_t &beta) {
+    auto B = Matrix(E, 0, d);
+    auto pow = F.element(F.one());
+    for (size_t i = 0; i <= d; ++i, pow *= beta) {
+      // Invariant: pow = beta^i
+
+      // 1. Apply the inverse vector space isomorphism to get a vector in E^d
+      const auto this_row = to_E_vector(pow);
+
+      // 2. Append the vector to the matrix B and check its rank
+      B.add_row(this_row.data);
+
+      // 3. If the matrix is no longer full-rank, break, and compute the
+      // resulting linear dependence and thus the minimal polynomial
+      if (B.rank() != B.rows)
+        break;
+    }
+    std::cout << "Found a linear dependence after adding " << B.rows << " rows"
+              << std::endl;
+    std::cout << B << std::endl;
+
+    return Polynomial(E, "x"); // TODO: Replace this
+  }
 };
 
 template <class PField, class EField, class FField>
@@ -110,9 +185,7 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
                                              const FField &F) {
   FieldEmbedding<PField, EField, FField> result(P, E, F);
 
-  const auto e = E.degree(), f = F.degree();
-  assert(f % e == 0);
-  const auto d = f / e;
+  const auto d = result.d, e = result.e, f = result.f;
 
   // 1. Computing prime-field generators
   const auto alpha_E = E.generating_element();
@@ -160,7 +233,7 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
   assert(N.rank() == f);
 
   // 5. Compute the minimal polynomial of alpha_FE over E
-
+  result.f_FE = result.compute_minimal_polynomial(alpha_FE);
   return result;
 }
 
