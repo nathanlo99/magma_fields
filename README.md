@@ -17,6 +17,14 @@ cd ../
 cmake --build build
 ```
 
+## Troubleshooting 
+
+If you are running from Linux or compiling with certain compilers, you may get a message asking you to add the flag `-fconcepts`. If this happens, replace the lines in the `CMakeLists.txt` file with 
+```
+set(CMAKE_CXX_FLAGS "-fconcepts -Ofast -flto -ffast-math -Wall -Wextra -Wno-unused-parameter -pedantic")
+set(CMAKE_EXE_LINKER_FLAGS "-fconcepts -Ofast -flto -ffast-math")
+```
+
 ## To run the executable
 
 ```
