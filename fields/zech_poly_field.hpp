@@ -55,7 +55,9 @@ struct ZechPolyField
   uint32_t degree() const override { return k; }
   integer_t cardinality() const override { return q; }
   FieldType type() const override { return FieldType::ZechPoly; }
-  const prime_field_t &prime_field() const { return base_field.prime_field(); }
+  const prime_field_t &prime_field() const override {
+    return base_field.prime_field();
+  }
   const ground_field_t &ground_field() const { return base_field; }
 
   // Element constructors

@@ -9,13 +9,13 @@
 
 template <class Field> struct FieldElement;
 
-template <typename T> struct Indexed {
+struct Indexed {
   static inline size_t next_id = 0;
   size_t m_id;
   Indexed() { m_id = next_id++; }
 
-  bool operator==(const Indexed<T> &other) const { return m_id == other.m_id; }
-  bool operator!=(const Indexed<T> &other) const { return !(*this == other); }
+  bool operator==(const Indexed &other) const { return m_id == other.m_id; }
+  bool operator!=(const Indexed &other) const { return !(*this == other); }
 };
 
 enum class FieldType {
@@ -57,10 +57,11 @@ template <class PrimeField> struct LatticeField {
   virtual uint32_t degree() const = 0;
   virtual integer_t cardinality() const = 0;
   virtual std::string to_string() const = 0;
+  virtual const PrimeField &prime_field() const = 0;
 };
 
 template <class Value, class PrimeField>
-struct Field : Indexed<Field<Value, PrimeField>>, LatticeField<PrimeField> {
+struct Field : Indexed, LatticeField<PrimeField> {
   using value_t = Value;
   using prime_field_t = PrimeField;
 
@@ -142,6 +143,13 @@ struct Field : Indexed<Field<Value, PrimeField>>, LatticeField<PrimeField> {
   }
 
   virtual std::string value_to_string(const value_t a) const = 0;
+};
+
+template <typename Value, typename PrimeField>
+class std::hash<Field<Value, PrimeField>> {
+  std::uint64_t operator()(const Field<Value, PrimeField> &field) const {
+    return field.m_id;
+  }
 };
 
 template <typename Field> struct FieldElement {

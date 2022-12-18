@@ -101,30 +101,30 @@ inline void FiniteField(const integer_t p, const uint64_t k = 1) {
 // 2. The relative generator for F over E
 // 3. The vector-space isomorphism between E^{(d)} and F
 // 4. The minimal polynomial of the relative generator
-template <class PField, class EField, class FField> struct FieldEmbedding {
-  using p_field_t = PField;
+template <class EField, class FField> struct FieldEmbedding {
+  using p_field_t = typename EField::prime_field_t;
   using e_field_t = EField;
   using f_field_t = FField;
-  using p_field_element_t = typename PField::element_t;
-  using e_field_element_t = typename EField::element_t;
-  using f_field_element_t = typename FField::element_t;
+  using p_field_element_t = typename p_field_t::element_t;
+  using e_field_element_t = typename e_field_t::element_t;
+  using f_field_element_t = typename f_field_t::element_t;
 
-  const PField &P;
-  const EField &E;
-  const FField &F;
+  const p_field_t &P;
+  const e_field_t &E;
+  const f_field_t &F;
 
   const size_t e, f, d;
 
   // 1. f x e matrix in P representing the map phi_{E -> F}
-  Matrix<PField> phi;
+  Matrix<p_field_t> phi;
   // 2. An element alpha_{F / E} of F such that E[alpha] = F
   f_field_element_t alpha_FE;
   // 3. A vector space isomorphism N encoding the transformation E^{(d)} -> F
-  Matrix<PField> psi, psi_inverse;
+  Matrix<p_field_t> psi, psi_inverse;
   // 4. The minimal polynomial of alpha_{F/E} over E
   Polynomial<EField> f_FE;
 
-  FieldEmbedding(const PField &P, const EField &E, const FField &F)
+  FieldEmbedding(const p_field_t &P, const EField &E, const FField &F)
       : P(P), E(E), F(F), e(E.degree()), f(F.degree()), d(f / e), phi(P),
         alpha_FE(F.element(F.zero())), psi(P), psi_inverse(P),
         f_FE(E, "w", {E.element(E.zero())}, {}) {
@@ -214,10 +214,11 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
   }
 };
 
-template <class PField, class EField, class FField>
-FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
-                                             const FField &F) {
-  FieldEmbedding<PField, EField, FField> result(P, E, F);
+template <class EField, class FField,
+          class PField = typename EField::prime_field_t>
+FieldEmbedding<EField, FField> Embed(const EField &E, const FField &F) {
+  const PField &P = E.prime_field();
+  FieldEmbedding<EField, FField> result(P, E, F);
 
   const auto d = result.d, e = result.e, f = result.f;
 
@@ -248,7 +249,7 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
       M[i][j] = coeffs[j];
   }
   result.phi = M.transpose();
-  // log() << M << std::endl;
+  log() << M << std::endl;
 
   // 3. Finding a generator for F/E
   // If G is contained in E and we already have a generator for F over
@@ -270,11 +271,11 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
       N[i * e + j] = row.data;
     }
   }
+  log() << N << std::endl;
+  assert(N.rank() == f);
+
   result.psi = N.transpose();
   result.psi_inverse = result.psi.inverse();
-
-  // log() << N << std::endl;
-  assert(N.rank() == f);
 
   // 5. Compute the minimal polynomial of alpha_FE over E
   result.f_FE = result.compute_minimal_polynomial(alpha_FE);

@@ -34,7 +34,7 @@ struct MediumPrimeField : Field<uint64_t, MediumPrimeField> {
   uint32_t degree() const override { return 1; }
   integer_t cardinality() const override { return gmp::from_uint(p); }
   FieldType type() const override { return FieldType::MediumPrime; }
-  const prime_field_t &prime_field() const { return *this; }
+  const prime_field_t &prime_field() const override { return *this; }
   const ground_field_t &ground_field() const { return *this; }
 
   // Element constructors

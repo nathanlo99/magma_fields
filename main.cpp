@@ -268,7 +268,7 @@ int main(int argc, char *argv[]) {
     std::cout << E << std::endl;
     std::cout << F << std::endl;
 
-    const auto embedding = Embed(P, E, F);
+    const auto embedding = Embed(E, F);
     const auto expected_phi = Matrix(P, 4, 2, {{1, 1}, {0, 1}, {0, 1}, {0, 0}});
     const auto expected_psi = Matrix(
         P, 4, 4, {{1, 1, 0, 0}, {0, 1, 1, 1}, {0, 1, 0, 1}, {0, 0, 0, 1}});
@@ -291,13 +291,13 @@ int main(int argc, char *argv[]) {
   });
 
   timeit("More embedding tests", []() {
-    const auto P = SmallPrimeField(2);
+    const auto P = SmallPrimeField(5);
     const auto E = ZechField(P, "x", 3);
-    const auto F = PrimePolyField(P, "w", 21);
+    const auto F = PrimePolyField(P, "w", 12);
     std::cout << P << std::endl;
     std::cout << E << std::endl;
     std::cout << F << std::endl;
 
-    const auto embedding = Embed(P, E, F);
+    const auto embedding = Embed(E, F);
   });
 }

@@ -49,7 +49,7 @@ struct SmallPrimeField : Field<uint32_t, SmallPrimeField> {
   uint32_t degree() const override { return 1; }
   integer_t cardinality() const override { return p; }
   FieldType type() const override { return FieldType::SmallPrime; }
-  const prime_field_t &prime_field() const { return *this; }
+  const prime_field_t &prime_field() const override { return *this; }
   const ground_field_t &ground_field() const { return *this; }
 
   value_t zero() const override { return 0; }
