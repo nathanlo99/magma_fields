@@ -269,6 +269,16 @@ int main(int argc, char *argv[]) {
     std::cout << F << std::endl;
 
     const auto embedding = Embed(P, E, F);
+    const auto expected_phi = Matrix(P, 4, 2, {{1, 1}, {0, 1}, {0, 1}, {0, 0}});
+    const auto expected_psi = Matrix(
+        P, 4, 4, {{1, 1, 0, 0}, {0, 1, 1, 1}, {0, 1, 0, 1}, {0, 0, 0, 1}});
+    const auto expected_alpha_FE = F.generating_element();
+    const auto expected_f_FE_string = "w^2 + w + (x + 1)";
+
+    assert(embedding.phi == expected_phi);
+    assert(embedding.psi == expected_psi);
+    assert(embedding.alpha_FE == expected_alpha_FE);
+    assert(embedding.f_FE.to_string() == expected_f_FE_string);
 
     for (int i = 0; i < 100; ++i) {
       const auto elem = F.random_element();
@@ -278,8 +288,16 @@ int main(int argc, char *argv[]) {
       assert(vec_E == vec_E2);
       assert(elem == elem2);
     }
+  });
 
-    const auto one = F.element(F.one());
-    const auto one_as_E_vector = embedding.to_E_vector(one);
+  timeit("More embedding tests", []() {
+    const auto P = SmallPrimeField(2);
+    const auto E = ZechField(P, "x", 3);
+    const auto F = PrimePolyField(P, "w", 21);
+    std::cout << P << std::endl;
+    std::cout << E << std::endl;
+    std::cout << F << std::endl;
+
+    const auto embedding = Embed(P, E, F);
   });
 }
