@@ -93,7 +93,7 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
 
   const size_t e, f, d;
 
-  // 1. e x f matrix in P representing the map phi_{E -> F}
+  // 1. f x e matrix in P representing the map phi_{E -> F}
   Matrix<PField> phi;
   // 2. An element alpha_{F / E} of F such that E[alpha] = F
   f_field_element_t alpha_FE;
@@ -104,8 +104,8 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
 
   FieldEmbedding(const PField &P, const EField &E, const FField &F)
       : P(P), E(E), F(F), e(E.degree()), f(F.degree()), d(f / e), phi(P),
-        alpha_FE(F.element(F.zero())), psi(P),
-        f_FE(E, "x", {E.element(E.zero())}, {}) {
+        alpha_FE(F.element(F.zero())), psi(P), psi_inverse(P),
+        f_FE(E, "w", {E.element(E.zero())}, {}) {
     if (f % e != 0)
       throw math_error() << "Could not create embedding for incompatible "
                             "fields E and F with absolute degrees "
@@ -114,6 +114,13 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
 
   f_field_element_t apply_embedding(const e_field_element_t &elem) const {
     return F.from_vector(phi * E.to_vector(elem));
+  }
+
+  Polynomial<f_field_t> lift(const Polynomial<e_field_t> &f) const {
+    std::vector<f_field_element_t> result_coeffs;
+    for (const auto &coeff : f.coeffs)
+      result_coeffs.push_back(apply_embedding(coeff));
+    return Polynomial<f_field_t>(F, f.variable, result_coeffs, f.support);
   }
 
   f_field_element_t from_E_vector(const Vector<e_field_t> &vec) const {
@@ -172,11 +179,16 @@ template <class PField, class EField, class FField> struct FieldEmbedding {
       if (B.rank() != B.rows)
         break;
     }
-    std::cout << "Found a linear dependence after adding " << B.rows << " rows"
-              << std::endl;
-    std::cout << B << std::endl;
 
-    return Polynomial(E, "x"); // TODO: Replace this
+    const auto degree_plus_one = B.rows;
+    const auto neg_beta_k = -B.pop_row();
+    const auto coeffs = B.transpose().solve(neg_beta_k);
+    std::vector<e_field_element_t> result_coeffs = coeffs.data;
+    result_coeffs.push_back(E.element(E.one()));
+    assert(result_coeffs.size() == degree_plus_one);
+    const auto result = Polynomial(E, "w", result_coeffs);
+    assert(lift(result)(beta) == 0);
+    return result;
   }
 };
 
@@ -190,7 +202,7 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
   // 1. Computing prime-field generators
   const auto alpha_E = E.generating_element();
   const auto alpha_F = F.generating_element();
-  const auto tau = find_root(E.f.lift(F));
+  const auto tau = find_root(E.f.lift_from_prime_field(F));
   log() << "alpha_E = " << alpha_E << std::endl;
   log() << "alpha_F = " << alpha_F << std::endl;
   log() << "tau = " << tau << std::endl;
@@ -206,7 +218,7 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
       M[i][j] = tau_i[j];
   }
   result.phi = M.transpose();
-  log() << M << std::endl;
+  // log() << M << std::endl;
 
   // 3. Finding a generator for F/E
   // If G is contained in E and we already have a generator for F over
@@ -231,7 +243,7 @@ FieldEmbedding<PField, EField, FField> Embed(const PField &P, const EField &E,
   result.psi = N.transpose();
   result.psi_inverse = result.psi.inverse();
 
-  log() << N << std::endl;
+  // log() << N << std::endl;
   assert(N.rank() == f);
 
   // 5. Compute the minimal polynomial of alpha_FE over E

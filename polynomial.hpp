@@ -2,6 +2,7 @@
 #pragma once
 
 #include "gmp.hpp"
+#include "lattice.hpp"
 #include "logger.hpp"
 #include "prime_factorization.hpp"
 
@@ -135,7 +136,8 @@ public:
   }
 
   template <class TargetField>
-  Polynomial<TargetField> lift(const TargetField &target_field) const {
+  Polynomial<TargetField>
+  lift_from_prime_field(const TargetField &target_field) const {
     if (field.degree() != 1)
       throw math_error()
           << "Can currently only lift polynomials from the base field";
@@ -401,11 +403,15 @@ public:
   }
 
   element_t at(const element_t &a) const {
+    if (field != a.field)
+      throw math_error("Cannot evaluate polynomial at element of unrelated "
+                       "field: did you mean to lift the polynomial first?");
     element_t result = zero;
     for (int d = coeffs.size() - 1; d >= 0; --d)
       result = result * a + coeffs[d];
     return result;
   }
+  element_t operator()(const element_t &a) const { return this->at(a); }
 
   std::string to_string() const {
     std::stringstream ss;

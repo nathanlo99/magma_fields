@@ -318,7 +318,7 @@ inline typename Field::element_t find_root(const Polynomial<Field> &f) {
     for (const Polynomial<Field> &u : factors) {
       if (u.degree() == 1) {
         const auto root = -u[0];
-        assert(f.at(root) == 0);
+        assert(f(root) == 0);
         return root;
       }
       const Polynomial<Field> gcd = polynomial_gcd(g, u);

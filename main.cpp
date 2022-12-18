@@ -269,23 +269,17 @@ int main(int argc, char *argv[]) {
     std::cout << F << std::endl;
 
     const auto embedding = Embed(P, E, F);
-    const auto alpha_E = E.generating_element();
-    const auto tau = embedding.apply_embedding(alpha_E);
-    std::cout << tau << std::endl;
 
-    // for (int i = 0; i < 100; ++i) {
-    //   const auto elem = F.random_element();
-    //   const auto vec_E = embedding.to_E_vector(elem);
-    //   const auto elem2 = embedding.from_E_vector(vec_E);
-    //   const auto vec_E2 = embedding.to_E_vector(elem2);
-    //   assert(vec_E == vec_E2);
-    //   assert(elem == elem2);
-    // }
+    for (int i = 0; i < 100; ++i) {
+      const auto elem = F.random_element();
+      const auto vec_E = embedding.to_E_vector(elem);
+      const auto elem2 = embedding.from_E_vector(vec_E);
+      const auto vec_E2 = embedding.to_E_vector(elem2);
+      assert(vec_E == vec_E2);
+      assert(elem == elem2);
+    }
 
     const auto one = F.element(F.one());
     const auto one_as_E_vector = embedding.to_E_vector(one);
-    std::cout << "1 in E^(d): " << one_as_E_vector << std::endl;
-
-    std::cout << "alpha_FE = " << embedding.alpha_FE << std::endl;
   });
 }

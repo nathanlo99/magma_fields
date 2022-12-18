@@ -34,6 +34,13 @@ template <class Field> struct Vector {
   Vector(const Vector &other) = default;
   Vector(Vector &&other) = default;
 
+  Vector operator-() const {
+    Vector result = *this;
+    for (auto &elem : result.data)
+      elem = -elem;
+    return result;
+  }
+
   Vector &operator=(const Vector &other) {
     size = other.size;
     data = other.data;

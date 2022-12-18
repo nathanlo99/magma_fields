@@ -100,6 +100,14 @@ template <typename Field> struct Matrix {
     check_invariants();
   }
 
+  Vector<Field> pop_row() {
+    const auto result = Vector(field, cols, data.back());
+    data.pop_back();
+    --rows;
+    check_invariants();
+    return result;
+  }
+
   // Addition
   Matrix &operator+=(const Matrix &other) {
     if (field != other.field)
