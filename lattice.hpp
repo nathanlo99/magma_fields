@@ -27,27 +27,25 @@ extern std::map<integer_t, Lattice<MediumPrimeField>> medium_prime_lattices;
 extern std::map<integer_t, Lattice<LargePrimeField>> large_prime_lattices;
 
 template <class PrimeField> struct Lattice {
+  using field_t = std::shared_ptr<LatticeField<PrimeField>>;
+
   const integer_t p;
-  std::vector<std::shared_ptr<LatticeField<PrimeField>>> fields;
+  std::vector<field_t> fields;
   Lattice(const integer_t p) : p(p) { add_prime_field(); }
 
-  std::shared_ptr<LatticeField<PrimeField>> add_prime_field();
+  field_t add_field(const uint64_t k, const std::string &_variable = "");
 
-  std::shared_ptr<LatticeField<PrimeField>>
-  add_prime_poly_field(const std::string &variable, const uint64_t k);
+private:
+  field_t add_prime_field();
+  field_t add_prime_poly_field(const std::string &variable, const uint64_t k);
 
-  std::shared_ptr<LatticeField<PrimeField>>
-  add_zech_field(const std::string &variable, const uint64_t k)
+  field_t add_zech_field(const std::string &variable, const uint64_t k)
+    requires(!std::is_same<PrimeField, LargePrimeField>::value);
+  field_t add_zech_poly_field(LatticeField<PrimeField> *base,
+                              const std::string &variable, const uint64_t k)
     requires(!std::is_same<PrimeField, LargePrimeField>::value);
 
-  std::shared_ptr<LatticeField<PrimeField>>
-  add_zech_poly_field(LatticeField<PrimeField> *base,
-                      const std::string &variable, const uint64_t k)
-    requires(!std::is_same<PrimeField, LargePrimeField>::value);
-
-  std::shared_ptr<LatticeField<PrimeField>>
-  add_field(const uint64_t k, const std::string &_variable = "");
-
+public:
   friend std::ostream &operator<<(std::ostream &os, const Lattice &lattice) {
     for (const auto &field : lattice.fields) {
       os << " - " << field << ": " << std::setw(20) << std::setfill(' ')

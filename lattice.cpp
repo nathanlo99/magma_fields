@@ -25,7 +25,7 @@ Lattice<PrimeField>::add_zech_field(const std::string &variable,
 {
   assert(fields.size() > 0);
   const auto prime_field = fields[0];
-  const PrimeField &P = dynamic_cast<PrimeField &>(*prime_field);
+  const auto P = dynamic_cast<PrimeField &>(*prime_field);
   fields.push_back(std::make_shared<ZechField<PrimeField>>(P, variable, k));
   return fields.back();
 }
@@ -36,7 +36,7 @@ Lattice<PrimeField>::add_prime_poly_field(const std::string &variable,
                                           const uint64_t k) {
   assert(fields.size() > 0);
   const auto prime_field = fields[0];
-  const PrimeField &P = dynamic_cast<PrimeField &>(*prime_field);
+  const auto P = dynamic_cast<PrimeField &>(*prime_field);
   fields.push_back(
       std::make_shared<PrimePolyField<PrimeField>>(P, variable, k));
   return fields.back();
@@ -51,7 +51,7 @@ Lattice<PrimeField>::add_zech_poly_field(LatticeField<PrimeField> *base,
 {
   assert(fields.size() > 0);
   const auto prime_field = fields[0];
-  const ZechField<PrimeField> &S = dynamic_cast<ZechField<PrimeField> &>(*base);
+  const auto S = dynamic_cast<ZechField<PrimeField> &>(*base);
   fields.push_back(
       std::make_shared<ZechPolyField<ZechField<PrimeField>>>(S, variable, k));
   return fields.back();
@@ -87,7 +87,9 @@ Lattice<PrimeField>::add_field(const uint64_t k, const std::string &_variable) {
 
   const integer_t q = gmp::pow(p, k);
 
-  if constexpr (!std::is_same<PrimeField, LargePrimeField>::value) {
+  if constexpr (std::is_same<PrimeField, LargePrimeField>::value) {
+    return add_prime_poly_field(variable, k);
+  } else {
     // 2. If the cardinality is at most 2^20, ZechField
     if (q <= (1_mpz << 20))
       return add_zech_field(variable, k);
@@ -110,7 +112,5 @@ Lattice<PrimeField>::add_field(const uint64_t k, const std::string &_variable) {
       assert(S_tmp->type() == FieldType::Zech);
       return add_zech_poly_field(S_tmp.get(), variable, k / best_ell);
     }
-  } else {
-    return add_prime_poly_field(variable, k);
   }
 }
