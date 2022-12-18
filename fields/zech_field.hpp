@@ -77,7 +77,8 @@ compute_zech_table(const uint32_t p, const uint32_t k, const uint32_t q,
 //
 // Elements are represented as powers of a primitive element, and a table of
 // Zech logarithms is stored for use in addition.
-template <class BaseField> struct ZechField : Field<uint32_t> {
+template <class BaseField>
+struct ZechField : Field<uint32_t, typename BaseField::prime_field_t> {
   using value_t = uint32_t;
   using element_t = FieldElement<ZechField>;
   using prime_field_t = typename BaseField::prime_field_t;

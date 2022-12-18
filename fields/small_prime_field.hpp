@@ -11,7 +11,7 @@
 #include <vector>
 
 // SmallPrimeField: FiniteField(p) for primes p < 65536
-struct SmallPrimeField : Field<uint32_t> {
+struct SmallPrimeField : Field<uint32_t, SmallPrimeField> {
   using value_t = uint32_t;
   using element_t = FieldElement<SmallPrimeField>;
   using prime_field_t = SmallPrimeField;

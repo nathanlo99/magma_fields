@@ -12,7 +12,7 @@
 #include <vector>
 
 // LargePrimeField: FiniteField(p) for primes 2^32 <= p
-struct LargePrimeField : Field<integer_t> {
+struct LargePrimeField : Field<integer_t, LargePrimeField> {
   using value_t = integer_t;
   using element_t = FieldElement<LargePrimeField>;
   using prime_field_t = LargePrimeField;

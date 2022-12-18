@@ -11,7 +11,7 @@
 #include <vector>
 
 // MediumPrimeField: FiniteField(p) for primes 2^16 <= p < 2^32
-struct MediumPrimeField : Field<uint64_t> {
+struct MediumPrimeField : Field<uint64_t, MediumPrimeField> {
   using value_t = uint64_t;
   using element_t = FieldElement<MediumPrimeField>;
   using prime_field_t = MediumPrimeField;

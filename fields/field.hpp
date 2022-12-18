@@ -50,7 +50,7 @@ inline std::string field_type_to_string(const FieldType &type) {
   }
 }
 
-struct AbstractField {
+template <class PrimeField> struct LatticeField {
   // Field properties
   virtual FieldType type() const = 0;
   virtual integer_t characteristic() const = 0;
@@ -59,8 +59,10 @@ struct AbstractField {
   virtual std::string to_string() const = 0;
 };
 
-template <class Value> struct Field : Indexed<Field<Value>>, AbstractField {
+template <class Value, class PrimeField>
+struct Field : Indexed<Field<Value, PrimeField>>, LatticeField<PrimeField> {
   using value_t = Value;
+  using prime_field_t = PrimeField;
 
   virtual ~Field() {}
 
@@ -107,8 +109,8 @@ template <class Value> struct Field : Indexed<Field<Value>>, AbstractField {
     // that c^((q - 1) / p_i^{e_i - d_i}) = 1
     if (c == zero())
       return 0;
-    const integer_t p = characteristic(), q = cardinality();
-    const uint64_t k = degree();
+    const integer_t p = this->characteristic(), q = this->cardinality();
+    const uint64_t k = this->degree();
     assert(q == gmp::pow(p, k));
     const Factorization factorization = factor_pk_minus_one(p, k);
     integer_t result = 1;
@@ -128,8 +130,8 @@ template <class Value> struct Field : Indexed<Field<Value>>, AbstractField {
   bool is_primitive(const value_t c) const {
     if (c == zero())
       return false;
-    const integer_t p = characteristic(), q = cardinality();
-    const uint64_t k = degree();
+    const integer_t p = this->characteristic(), q = this->cardinality();
+    const uint64_t k = this->degree();
     assert(q == gmp::pow(p, k));
     const Factorization factorization = factor_pk_minus_one(p, k);
     for (const Factor &factor : factorization) {

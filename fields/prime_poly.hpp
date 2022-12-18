@@ -9,7 +9,8 @@
 #include "vector.hpp"
 
 template <class BaseField>
-struct PrimePolyField : Field<Polynomial<BaseField>> {
+struct PrimePolyField
+    : Field<Polynomial<BaseField>, typename BaseField::prime_field_t> {
   using value_t = Polynomial<BaseField>;
   using base_element_t = FieldElement<BaseField>;
   using element_t = FieldElement<PrimePolyField>;
