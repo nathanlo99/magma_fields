@@ -2,7 +2,6 @@
 #pragma once
 
 #include "gmp.hpp"
-#include "lattice.hpp"
 #include "logger.hpp"
 #include "prime_factorization.hpp"
 
