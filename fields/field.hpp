@@ -5,6 +5,7 @@
 #include "prime_factorization.hpp"
 
 #include <iostream>
+#include <sstream>
 #include <string>
 
 template <class Field> struct FieldElement;
@@ -143,7 +144,15 @@ struct Field : Indexed, LatticeField<PrimeField> {
   }
 
   virtual std::string value_to_string(const value_t a) const = 0;
+
+  virtual std::string to_string() const override = 0;
 };
+
+template <typename Value, typename PrimeField>
+std::ostream &operator<<(std::ostream &os,
+                         const Field<Value, PrimeField> &field) {
+  return os << field.to_string();
+}
 
 template <typename Value, typename PrimeField>
 class std::hash<Field<Value, PrimeField>> {
@@ -233,6 +242,7 @@ template <typename Field> struct FieldElement {
   }
 
   friend std::ostream &operator<<(std::ostream &os, const FieldElement &val) {
-    return os << val.field.value_to_string(val.value);
+    return os << val.to_string();
   }
+  std::string to_string() const { return field.value_to_string(value); }
 };

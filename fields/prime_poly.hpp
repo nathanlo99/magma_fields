@@ -113,16 +113,10 @@ struct PrimePolyField
     return a.to_string();
   }
 
-  friend std::ostream &operator<<(std::ostream &os,
-                                  const PrimePolyField &field) {
-    return os << "Degree " << field.f.degree() << " extension with cardinality "
-              << field.characteristic() << "^" << field.degree() << " = "
-              << field.cardinality();
-  }
-
   std::string to_string() const override {
     std::stringstream ss;
-    ss << *this;
+    ss << "Degree " << f.degree() << " extension with cardinality "
+       << characteristic() << "^" << degree() << " = " << cardinality();
     return ss.str();
   }
 };

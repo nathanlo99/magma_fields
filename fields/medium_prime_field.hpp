@@ -96,7 +96,7 @@ struct MediumPrimeField : Field<uint64_t, MediumPrimeField> {
     return t0 >= 0 ? t0 : t0 + p;
   }
   value_t mul(const value_t a, const value_t b) const override {
-    return (static_cast<uint64_t>(a) * b) % p;
+    return (a * b) % p;
   }
 
   // NOTE: We take the default implementations of div and pow
@@ -107,14 +107,9 @@ struct MediumPrimeField : Field<uint64_t, MediumPrimeField> {
     return std::to_string(a);
   }
 
-  friend std::ostream &operator<<(std::ostream &os,
-                                  const MediumPrimeField &field) {
-    return os << "Prime field with order " << field.p;
-  }
-
   std::string to_string() const override {
     std::stringstream ss;
-    ss << *this;
+    ss << "Prime field with order " << p;
     return ss.str();
   }
 };

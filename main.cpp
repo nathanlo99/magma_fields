@@ -31,25 +31,34 @@ int main(int argc, char *argv[]) {
   notimeit("Prime field of size near 2^16", []() {
     const auto F = SmallPrimeField(65521);
     const auto a = F(20000), b = F(30000);
+    const auto product = a * b;
+    const auto sum = a + b;
     std::cout << "In " << F << ", " << std::endl;
-    std::cout << a << " * " << b << " = " << a * b << std::endl;
+    std::cout << a << " * " << b << " = " << product << std::endl;
+    std::cout << a << " + " << b << " = " << sum << std::endl;
   });
 
   notimeit("Prime field of medium size", []() {
     const auto F = MediumPrimeField(100003);
     const auto a = F(20000), b = F(30000);
+    const auto product = a * b;
+    const auto sum = a + b;
     std::cout << "In " << F << ", " << std::endl;
-    std::cout << a << " * " << b << " = " << a * b << std::endl;
+    std::cout << a << " * " << b << " = " << product << std::endl;
+    std::cout << a << " + " << b << " = " << sum << std::endl;
   });
 
   notimeit("Prime field of size over 2^32", []() {
     const auto F = LargePrimeField(4294967311);
     const auto a = F(20000), b = F(30000);
+    const auto product = a * b;
+    const auto sum = a + b;
     std::cout << "In " << F << ", " << std::endl;
-    std::cout << a << " * " << b << " = " << a * b << std::endl;
+    std::cout << a << " * " << b << " = " << product << std::endl;
+    std::cout << a << " + " << b << " = " << sum << std::endl;
   });
 
-  timeit("Field of cardinality 3^3", []() {
+  notimeit("Field of cardinality 3^3", []() {
     const auto F3 = SmallPrimeField(3);
     const auto f = Polynomial(F3, "x", {1, 2, 0, 1});
     const auto Z = ZechField(F3, f);
@@ -60,7 +69,7 @@ int main(int argc, char *argv[]) {
     }
   });
 
-  timeit("Field of cardinality 2^5", []() {
+  notimeit("Field of cardinality 2^5", []() {
     const auto F2 = SmallPrimeField(2);
     const auto x = Polynomial(F2, "x");
     const auto f = (x ^ 5) + (x ^ 2) + 1;
@@ -89,7 +98,8 @@ int main(int argc, char *argv[]) {
     const auto zg = F2_32.primitive_element();
   });
 
-  notimeit("Debug demo", []() {
+  // NOTE: Currently buggy due to template and polymorphism hell
+  notimeit("Finite field construction", []() {
     FiniteField(5, 4);   // Zech
     FiniteField(3, 24);  // Two-step: ZechPoly over a Zech
     FiniteField(2, 8);   // ZechField
@@ -102,7 +112,7 @@ int main(int argc, char *argv[]) {
     print_lattices(std::cout);
   });
 
-  notimeit("Polynomial gcd's", []() {
+  timeit("Polynomial gcd's", []() {
     const auto F = SmallPrimeField(127);
     const auto x = Polynomial(F, "x");
     const auto f = (x ^ 2) + 7 * x + 6;
@@ -169,7 +179,7 @@ int main(int argc, char *argv[]) {
     }
   });
 
-  notimeit("Matrix row-reduction", []() {
+  timeit("Matrix row-reduction", []() {
     const auto P = SmallPrimeField(5);
 
     {
@@ -226,18 +236,20 @@ int main(int argc, char *argv[]) {
     }
   });
 
-  notimeit("General polynomial factorization", []() {
+  timeit("General polynomial factorization", []() {
     const auto P = SmallPrimeField(3);
     const auto x = Polynomial(P, "x");
     const auto f = (((x ^ 11) + 2 * (x ^ 9) + 2 * (x ^ 8) + (x ^ 6) + (x ^ 5) +
                      2 * (x ^ 3) + 2 * (x ^ 2) + 1) ^
-                    5) +
+                    20) +
                    1;
+    // f is a 20-th power, plus 1, and has degree 220
+    // On my computer, it factors in around 100ms
     std::cout << f << std::endl;
     std::cout << factor_polynomial(f) << std::endl;
   });
 
-  notimeit("Polynomial factorization fuzz-test", []() {
+  timeit("Polynomial factorization fuzz-test", []() {
     // 'If it works for primes under 50, it works for all primes'
     const size_t max_prime = 50, max_degree = 60, num_iterations = 10,
                  degree_multiplier = max_degree / num_iterations;

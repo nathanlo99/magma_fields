@@ -3,6 +3,7 @@
 
 #include "field.hpp"
 #include "gmp.hpp"
+#include "logger.hpp"
 #include "random.hpp"
 #include "vector.hpp"
 
@@ -116,14 +117,9 @@ struct SmallPrimeField : Field<uint32_t, SmallPrimeField> {
     return std::to_string(a);
   }
 
-  friend std::ostream &operator<<(std::ostream &os,
-                                  const SmallPrimeField &field) {
-    return os << "Prime field with order " << field.p;
-  }
-
   std::string to_string() const override {
     std::stringstream ss;
-    ss << *this;
+    ss << "Prime field with order " << p;
     return ss.str();
   }
 };

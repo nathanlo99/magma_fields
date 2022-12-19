@@ -100,18 +100,13 @@ struct LargePrimeField : Field<integer_t, LargePrimeField> {
 
   bool eq(const value_t a, const value_t b) const override { return a == b; }
 
-  friend std::ostream &operator<<(std::ostream &os,
-                                  const LargePrimeField &field) {
-    return os << "Prime field with order " << field.p;
-  }
-
   std::string value_to_string(const value_t value) const override {
     return value.get_str();
   }
 
   std::string to_string() const override {
     std::stringstream ss;
-    ss << *this;
+    ss << "Prime field with order " << p;
     return ss.str();
   }
 };

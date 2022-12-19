@@ -250,14 +250,10 @@ struct ZechField : Field<uint32_t, typename BaseField::prime_field_t> {
     return to_polynomial(a).to_string();
   }
 
-  friend std::ostream &operator<<(std::ostream &os, const ZechField &field) {
-    return os << "Degree " << field.f.degree()
-              << " extension with defining polynomial '" << field.f << "'";
-  }
-
   std::string to_string() const override {
     std::stringstream ss;
-    ss << *this;
+    ss << "Degree " << f.degree() << " extension over " << f.field.to_string()
+       << " with defining polynomial '" << f << "'";
     return ss.str();
   }
 };

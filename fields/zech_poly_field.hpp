@@ -43,8 +43,8 @@ struct ZechPolyField
       throw math_error()
           << "ZechPolyField expected SmallPrimeField as base field, got "
           << field_type_to_string(base_field.type());
-    log() << "Creating degree " << k << " extension over " << base_field
-          << std::endl;
+    log() << "Creating degree " << k << " extension over "
+          << base_field.to_string() << std::endl;
     f = get_irreducible_polynomial(base_field, variable, k);
     log() << "Found the irreducible polynomial " << f << std::endl;
     log() << "Constructed PrimePolyField over " << base_field << " with degree "
@@ -116,16 +116,10 @@ struct ZechPolyField
     return a.to_string();
   }
 
-  friend std::ostream &operator<<(std::ostream &os,
-                                  const ZechPolyField &field) {
-    return os << "Degree " << field.f.degree() << " extension with cardinality "
-              << field.characteristic() << "^" << field.degree() << " = "
-              << field.cardinality();
-  }
-
   std::string to_string() const override {
     std::stringstream ss;
-    ss << *this;
+    ss << "Degree " << f.degree() << " extension with cardinality "
+       << characteristic() << "^" << degree() << " = " << cardinality();
     return ss.str();
   }
 };

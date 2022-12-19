@@ -419,7 +419,7 @@ public:
   }
 
   friend std::ostream &operator<<(std::ostream &os, const Polynomial &p) {
-    if (p.coeffs == std::vector<element_t>({p.zero}))
+    if (p == 0)
       return os << "0";
     bool first = true;
     for (auto d_it = p.support.rbegin(); d_it != p.support.rend(); ++d_it) {
@@ -429,7 +429,7 @@ public:
       first = false;
 
       const element_t coeff = p.coeffs[d];
-      const std::string coeff_str = p.field.value_to_string(coeff.value);
+      const std::string coeff_str = coeff.to_string();
       const std::string display_str = coeff_str.find('+') == std::string::npos
                                           ? coeff_str
                                           : "(" + coeff_str + ")";
