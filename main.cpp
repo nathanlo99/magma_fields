@@ -312,4 +312,42 @@ int main(int argc, char *argv[]) {
 
     const auto embedding = Embed(E, F);
   });
+
+  timeit("Square roots in finite field extensions", []() {
+    const auto P = SmallPrimeField(11);
+    const auto E = ZechField(P, "x", 3);
+    const auto F = PrimePolyField(P, "w", 12);
+    std::cout << P << std::endl;
+    std::cout << E << std::endl;
+    std::cout << F << std::endl;
+
+    for (int i = 0; i < 10; ++i) {
+      const auto elem = P.random_element();
+      const auto &[has_root, root] = nth_root(P, elem, 2);
+      if (has_root)
+        std::cout << "A square root of " << elem << " in P is " << root
+                  << std::endl;
+    }
+
+    for (int i = 0; i < 10; ++i) {
+      const auto elem = E.random_element();
+      const auto &[has_root, root] = nth_root(E, elem, 2);
+      if (has_root)
+        std::cout << "A square root of " << elem << " in E is " << root
+                  << std::endl;
+    }
+
+    for (int i = 0; i < 10; ++i) {
+      const auto elem = F.random_element();
+      const auto &[has_root, root] = nth_root(F, elem, 2);
+      if (has_root)
+        std::cout << "A square root of " << elem << " in F is " << root
+                  << std::endl;
+
+      const auto &[has_cube_root, cube_root] = nth_root(F, elem, 3);
+      if (has_cube_root)
+        std::cout << "A cube root of " << elem << " in F is " << cube_root
+                  << std::endl;
+    }
+  });
 }

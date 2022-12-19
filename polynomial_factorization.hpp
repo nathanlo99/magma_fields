@@ -298,38 +298,35 @@ PolynomialFactorization<Field> factor_polynomial(const Polynomial<Field> &f) {
   return result;
 }
 
-// Given a polynomial f with degree >= 2 which splits into linear factors over a
-// Field F, return an arbitrary root alpha of f in F
+// Given a polynomial f with degree >= 2 over a finite field extension F, return
+// an arbitrary root alpha of f in F
 template <class Field>
 inline typename Field::element_t find_root(const Polynomial<Field> &f) {
-  // Idea: Basically a version of Cantor-Zassenhaus above, specialized to d = 1,
-  // which exits after finding any linear factor
-
-  const bool odd_characteristic = f.field.characteristic() % 2 == 1;
-  std::vector<Polynomial<Field>> factors = {f};
-  const uint64_t n = f.degree();
-  const integer_t q = f.field.cardinality(), exp = (q - 1) / 2;
-  while (!factors.empty()) {
-    std::vector<Polynomial<Field>> new_factors;
-    const Polynomial<Field> h =
-        random_polynomial<false, false>(f.field, f.variable, n - 1);
-    const Polynomial<Field> g =
-        odd_characteristic ? (pow_mod(h, exp, f) - 1) % f : h;
-    for (const Polynomial<Field> &u : factors) {
-      if (u.degree() == 1) {
-        const auto root = -u[0];
-        assert(f(root) == 0);
-        return root;
-      }
-      const Polynomial<Field> gcd = polynomial_gcd(g, u);
-      if (gcd == u || gcd == u.one_poly()) {
-        new_factors.push_back(u);
-      } else {
-        new_factors.push_back(gcd);
-        new_factors.push_back(u / gcd);
-      }
-    }
-    factors = new_factors;
+  const auto factorization = factor_polynomial(f);
+  for (const auto &[base, exp] : factorization) {
+    if (base.degree() == 1)
+      return -base[0];
   }
-  __builtin_unreachable();
+  throw math_error() << "Polynomial " << f << " had no roots";
+}
+
+template <class Field>
+inline std::pair<bool, typename Field::element_t>
+nth_root(const Field &field, const typename Field::element_t &a,
+         const size_t n) {
+  if (n == 0)
+    throw math_error("Cannot take 0-th roots");
+  if (n == 1)
+    return std::make_pair(true, a);
+
+  // TODO: Use a faster method if n == 2 and Field is a prime field
+  const auto x = Polynomial(field, "x");
+  const auto f = (x ^ n) - a;
+  try {
+    const auto root = find_root(f);
+    assert((root ^ n) == a);
+    return std::make_pair(true, root);
+  } catch (...) {
+    return std::make_pair(false, field.element(field.zero()));
+  }
 }

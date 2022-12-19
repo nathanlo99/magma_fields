@@ -40,7 +40,7 @@ inline void load_cached_factorizations() {
     uint64_t p, k, exp;
     std::string base;
     iss >> p >> k;
-    std::pair<uint64_t, uint64_t> key = std::make_pair(p, k);
+    const std::pair<uint64_t, uint64_t> key = std::make_pair(p, k);
     while (iss >> base && iss >> exp) {
       factorization.push_back(Factor(integer_t(base), exp));
     }
