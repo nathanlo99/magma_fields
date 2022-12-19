@@ -179,6 +179,39 @@ int main(int argc, char *argv[]) {
     }
   });
 
+  timeit("General polynomial factorization", []() {
+    const auto P = SmallPrimeField(3);
+    const auto x = Polynomial(P, "x");
+    const auto f = (((x ^ 11) + 2 * (x ^ 9) + 2 * (x ^ 8) + (x ^ 6) + (x ^ 5) +
+                     2 * (x ^ 3) + 2 * (x ^ 2) + 1) ^
+                    20) +
+                   1;
+    // f is a 20-th power, plus 1, and has degree 220
+    // On my computer, it factors in around 100ms
+    std::cout << f << std::endl;
+    std::cout << factor_polynomial(f) << std::endl;
+  });
+
+  timeit("Polynomial factorization fuzz-test", []() {
+    // 'If it works for primes under 50, it works for all primes'
+    const size_t max_prime = 50, max_degree = 60, num_iterations = 10,
+                 degree_multiplier = max_degree / num_iterations;
+    for (integer_t p = 2; p < max_prime; gmp::next_prime(p)) {
+      const std::string lead_string = "Testing prime " + p.get_str() + "... ";
+      std::cout << lead_string << std::flush;
+      const auto P = SmallPrimeField(p);
+      for (size_t i = 0; i < num_iterations; ++i) {
+        std::cout << "\r" << lead_string << i << "/" << num_iterations
+                  << std::flush;
+        const auto g =
+            random_polynomial<true, false>(P, "x", degree_multiplier * i + 1);
+        const auto result = factor_polynomial(g);
+      }
+      std::cout << "\r" << lead_string << num_iterations << "/"
+                << num_iterations << std::endl;
+    }
+  });
+
   timeit("Matrix row-reduction", []() {
     const auto P = SmallPrimeField(5);
 
@@ -233,39 +266,6 @@ int main(int argc, char *argv[]) {
       const auto vec2 = F.to_vector(poly2);
       assert(poly1 == poly2);
       assert(vec1 == vec2);
-    }
-  });
-
-  timeit("General polynomial factorization", []() {
-    const auto P = SmallPrimeField(3);
-    const auto x = Polynomial(P, "x");
-    const auto f = (((x ^ 11) + 2 * (x ^ 9) + 2 * (x ^ 8) + (x ^ 6) + (x ^ 5) +
-                     2 * (x ^ 3) + 2 * (x ^ 2) + 1) ^
-                    20) +
-                   1;
-    // f is a 20-th power, plus 1, and has degree 220
-    // On my computer, it factors in around 100ms
-    std::cout << f << std::endl;
-    std::cout << factor_polynomial(f) << std::endl;
-  });
-
-  timeit("Polynomial factorization fuzz-test", []() {
-    // 'If it works for primes under 50, it works for all primes'
-    const size_t max_prime = 50, max_degree = 60, num_iterations = 10,
-                 degree_multiplier = max_degree / num_iterations;
-    for (integer_t p = 2; p < max_prime; gmp::next_prime(p)) {
-      const std::string lead_string = "Testing prime " + p.get_str() + "... ";
-      std::cout << lead_string << std::flush;
-      const auto P = SmallPrimeField(p);
-      for (size_t i = 0; i < num_iterations; ++i) {
-        std::cout << "\r" << lead_string << i << "/" << num_iterations
-                  << std::flush;
-        const auto g =
-            random_polynomial<true, false>(P, "x", degree_multiplier * i + 1);
-        const auto result = factor_polynomial(g);
-      }
-      std::cout << "\r" << lead_string << num_iterations << "/"
-                << num_iterations << std::endl;
     }
   });
 
